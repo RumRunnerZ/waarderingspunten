@@ -209,6 +209,10 @@
       <button class="btn-clear" onclick="clearImport()">Clear</button>
     </div>
     <div class="import-feedback" id="importFeedback"></div>
+    <details style="margin-top:.75rem">
+      <summary style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);cursor:pointer">Show extracted PDF text (for debugging)</summary>
+      <textarea id="debugText" rows="8" style="margin-top:.5rem;font-size:.7rem" placeholder="Extracted text will appear here after loading a PDF…" readonly></textarea>
+    </details>
   </div>
 
   <!-- Manual Add -->
@@ -331,6 +335,7 @@
       extractedPdfText = fullText;
       const btn = document.getElementById('btnImport');
       btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+      document.getElementById('debugText').value = fullText;
       feedback('ok', '✓ PDF loaded (' + pdf.numPages + ' page). Set month and click Import Shifts.');
     } catch(e) {
       feedback('err', '⚠ Could not read PDF: ' + e.message);
