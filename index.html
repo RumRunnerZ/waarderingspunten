@@ -56,9 +56,8 @@
   .import-box h2 { font-size:1rem; font-weight:700; margin-bottom:.5rem; letter-spacing:-.01em; }
   .import-desc { font-size:.8rem; color:var(--muted); margin-bottom:1rem; line-height:1.6; }
   .import-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-  .pdf-drop { border:2px dashed var(--border); border-radius:10px; padding:2rem 1rem; text-align:center; cursor:pointer; transition:all .2s; position:relative; margin-bottom:1rem; }
+  .pdf-drop { border:2px dashed var(--border); border-radius:10px; padding:2rem 1rem; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:1rem; }
   .pdf-drop:hover, .pdf-drop.drag { border-color:var(--accent3); background:rgba(53,200,241,.04); }
-  .pdf-drop input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
   .pdf-drop-icon { font-size:2rem; margin-bottom:.5rem; }
   .pdf-drop-label { font-size:.85rem; color:var(--muted); }
   .pdf-drop-label strong { color:var(--accent3); }
@@ -190,12 +189,12 @@
     <p class="import-desc">
       Select your schedule PDF — times are extracted automatically and converted from UTC to Spanish local time.
     </p>
-    <div class="pdf-drop" id="pdfDrop" onclick="document.getElementById('pdfFile').click()">
-      <input type="file" id="pdfFile" accept=".pdf" onchange="handlePdfFile(this.files[0])">
+    <div class="pdf-drop" id="pdfDrop">
       <div class="pdf-drop-icon">📄</div>
       <div class="pdf-drop-label">Drop your PDF here or <strong>click to browse</strong></div>
       <div class="pdf-filename" id="pdfFilename"></div>
     </div>
+    <input type="file" id="pdfFile" accept=".pdf" style="display:none" onchange="handlePdfFile(this.files[0])">
     <div class="import-row">
       <div class="form-group"><label>Schedule Month &amp; Year</label><input type="month" id="importMonth"></div>
       <div class="form-group"><label>Import Mode</label>
@@ -266,7 +265,79 @@
   }
   document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
-  // ── Spain DST ─────────────────────────────────────────────────────────────
+  // ── PDF handling ──────────────────────────────────────────────────────────
+  let extractedPdfText = '';
+
+  // Load pdf.js from CDN
+  (function() {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    };
+    document.head.appendChild(s);
+  })();
+
+  // Wire up drop zone and file input after DOM ready
+  window.addEventListener('DOMContentLoaded', () => {
+    const zone  = document.getElementById('pdfDrop');
+    const input = document.getElementById('pdfFile');
+    zone.addEventListener('click',      () => input.click());
+    zone.addEventListener('dragover',   e  => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave',  e  => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
+    zone.addEventListener('drop',       e  => {
+      e.preventDefault(); zone.classList.remove('drag');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type === 'application/pdf') handlePdfFile(f);
+      else feedback('err', 'Please drop a PDF file.');
+    });
+  });
+
+  async function handlePdfFile(file) {
+    if (!file) return;
+    feedback('ok', '⏳ Reading PDF…');
+    document.getElementById('pdfFilename').textContent = '📎 ' + file.name;
+    document.getElementById('pdfFilename').style.display = 'block';
+    try {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let fullText = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page    = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const items   = content.items.filter(i => i.str.trim());
+        // Group items by Y position into lines
+        const lines = [];
+        for (const item of items) {
+          const y = Math.round(item.transform[5]);
+          const row = lines.find(l => Math.abs(l.y - y) < 4);
+          if (row) row.parts.push({ x: item.transform[4], text: item.str });
+          else     lines.push({ y, parts: [{ x: item.transform[4], text: item.str }] });
+        }
+        lines.sort((a,b) => b.y - a.y);
+        for (const line of lines) {
+          line.parts.sort((a,b) => a.x - b.x);
+          let str = '', lastX = null;
+          for (const part of line.parts) {
+            if (lastX !== null) str += ' '.repeat(Math.max(1, Math.round((part.x - lastX) / 6)));
+            str  += part.text;
+            lastX = part.x + part.text.length * 6;
+          }
+          fullText += str.trimEnd() + '\n';
+        }
+        fullText += '\n';
+      }
+      extractedPdfText = fullText;
+      const btn = document.getElementById('btnImport');
+      btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+      feedback('ok', '✓ PDF loaded (' + pdf.numPages + ' page). Set month and click Import Shifts.');
+    } catch(e) {
+      feedback('err', '⚠ Could not read PDF: ' + e.message);
+    }
+  }
+
+    // ── Spain DST ─────────────────────────────────────────────────────────────
   function lastSunday(year, month) {
     const last = new Date(year, month, 0);
     return last.getDate() - last.getDay();
@@ -384,7 +455,7 @@
   }
   function clearImport() {
     extractedPdfText = '';
-    document.getElementById('pdfFile').value = '';
+    document.getElementById('pdfFile').value = ''; // reset file input
     document.getElementById('pdfFilename').style.display = 'none';
     document.getElementById('pdfFilename').textContent = '';
     document.getElementById('btnImport').disabled = true;
