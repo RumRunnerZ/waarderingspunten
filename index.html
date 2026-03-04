@@ -368,7 +368,7 @@
     const [year, month] = yearMonth.split('-').map(Number);
     const DAY_RE  = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(\d{1,2})$/i;
     const TIME_RE = /^\d{4}$/;
-    const isFlightLabel = l => /^fl/i.test(l.replace(/[^a-z0-9]/gi,''));
+    const isFlightLabel = l => /^f[l1]/i.test(l.replace(/[^a-z0-9]/gi,''));
 
     const tokens = text.split(/\s+/).filter(t => t.trim());
     const parsed = [], errors = [];
