@@ -274,148 +274,52 @@
   }
 
   // ── Schedule parser ───────────────────────────────────────────────────────
+  // Reads sequential tokens from PDF text.
+  // Only imports days labelled FlD/FLD (flight duty). Off/X/standby skipped.
   function parseSchedule(text, yearMonth) {
     const [year, month] = yearMonth.split('-').map(Number);
-    const lines = text.split('\n').map(l => l.trimEnd()).filter(l => l.trim());
-    if (lines.length < 2) throw new Error('Need at least 2 rows.');
+    const DAY_RE  = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(\d{1,2})$/i;
+    const TIME_RE = /^\d{4}$/;
+    const isFlightLabel = l => /^fl/i.test(l.replace(/[^a-z0-9]/gi,''));
 
-    // Find header row: first row containing day tokens like Mon02
-    const DAY_RE = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(\d{1,2})$/i;
-    let headerLine = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].split(/\s+/).some(t => DAY_RE.test(t))) { headerLine = i; break; }
-    }
-    if (headerLine < 0) throw new Error('No day headers found (e.g. Mon02 Tue03).');
-
-    const rawHeader = lines[headerLine];
-    const headerTokens = rawHeader.split(/\s+/);
-
-    // Build column map: dayNum -> character start position in raw header
-    const columns = [];
-    let pos = 0;
-    for (const tok of headerTokens) {
-      const idx = rawHeader.indexOf(tok, pos);
-      const m = tok.match(DAY_RE);
-      if (m) columns.push({ dayNum: parseInt(m[2]), charPos: idx });
-      pos = idx + tok.length;
-    }
-    if (!columns.length) throw new Error('Could not parse day columns.');
-
-    // Gather time tokens from all data rows, assign to nearest column by char position
-    const colTimes = columns.map(() => []);
-    for (let i = headerLine + 1; i < lines.length; i++) {
-      const line = lines[i];
-      const tokenRe = /\S+/g;
-      let m;
-      while ((m = tokenRe.exec(line)) !== null) {
-        const tok = m[0], tokPos = m.index;
-        if (!/^\d{4}$/.test(tok)) continue; // only 4-digit times
-        // Assign to nearest column
-        let best = 0, bestDist = Infinity;
-        columns.forEach((col, ci) => {
-          const d = Math.abs(tokPos - col.charPos);
-          if (d < bestDist) { bestDist = d; best = ci; }
-        });
-        colTimes[best].push(tok);
-      }
-    }
-
+    const tokens = text.split(/\s+/).filter(t => t.trim());
     const parsed = [], errors = [];
-    columns.forEach((col, i) => {
-      const times = colTimes[i];
-      if (!times.length) return; // off day
+    let i = 0;
+    while (i < tokens.length) {
+      const dayMatch = tokens[i].match(DAY_RE);
+      if (!dayMatch) { i++; continue; }
+      const dayNum  = parseInt(dayMatch[2]);
+      const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(dayNum).padStart(2,'0');
+      const label   = tokens[i+1] || '';
+      if (!isFlightLabel(label)) { i += 2; continue; } // skip Off, X, standby
+      // Collect next two 4-digit time tokens
+      const times = [];
+      let j = i + 2;
+      while (j < tokens.length && times.length < 2) {
+        if (DAY_RE.test(tokens[j])) break; // hit next day
+        if (TIME_RE.test(tokens[j])) times.push(tokens[j]);
+        j++;
+      }
       if (times.length !== 2) {
-        errors.push('Day ' + col.dayNum + ': expected 2 times, got [' + times.join(',') + ']');
-        return;
+        errors.push('Day ' + dayNum + ': expected 2 times, got [' + times.join(',') + ']');
+      } else {
+        const s = utcToSpain(dateStr, times[0]);
+        const e = utcToSpain(dateStr, times[1]);
+        parsed.push({ date: s.dateStr, startTime: s.time, endTime: e.time });
       }
-      const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(col.dayNum).padStart(2,'0');
-      const start = utcToSpain(dateStr, times[0]);
-      const end   = utcToSpain(dateStr, times[1]);
-      parsed.push({ date: start.dateStr, startTime: start.time, endTime: end.time });
-    });
-    return { parsed, errors };
-  }
-
-  // ── PDF handling ──────────────────────────────────────────────────────────
-  let extractedPdfText = '';
-
-  // Load pdf.js from CDN
-  const pdfScript = document.createElement('script');
-  pdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-  document.head.appendChild(pdfScript);
-  pdfScript.onload = () => {
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  };
-
-  // Drag and drop support
-  const dropZone = document.getElementById('pdfDrop');
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') handlePdfFile(file);
-    else feedback('err', 'Please drop a PDF file.');
-  });
-
-  async function handlePdfFile(file) {
-    if (!file) return;
-    feedback('ok', '⏳ Reading PDF…');
-    document.getElementById('pdfFilename').textContent = file.name;
-    document.getElementById('pdfFilename').style.display = 'block';
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        // Reconstruct lines using y-position grouping
-        const items = content.items.filter(i => i.str.trim());
-        // Group by Y position (same line = within 3px)
-        const lines = [];
-        for (const item of items) {
-          const y = Math.round(item.transform[5]);
-          const existing = lines.find(l => Math.abs(l.y - y) < 4);
-          if (existing) {
-            existing.parts.push({ x: item.transform[4], text: item.str });
-          } else {
-            lines.push({ y, parts: [{ x: item.transform[4], text: item.str }] });
-          }
-        }
-        // Sort lines top-to-bottom, parts left-to-right
-        lines.sort((a,b) => b.y - a.y);
-        for (const line of lines) {
-          line.parts.sort((a,b) => a.x - b.x);
-          // Reconstruct with approximate spacing based on x positions
-          let lineStr = '';
-          let lastX = null;
-          for (const part of line.parts) {
-            if (lastX !== null) {
-              const gap = part.x - lastX;
-              const spaces = Math.max(1, Math.round(gap / 6));
-              lineStr += ' '.repeat(spaces);
-            }
-            lineStr += part.text;
-            lastX = part.x + (part.width || part.text.length * 6);
-          }
-          fullText += lineStr.trimEnd() + '\n';
-        }
-        fullText += '\n';
-      }
-      extractedPdfText = fullText;
-      document.getElementById('btnImport').disabled = false;
-      document.getElementById('btnImport').style.opacity = '1';
-      document.getElementById('btnImport').style.cursor = 'pointer';
-      feedback('ok', '✓ PDF loaded: ' + pdf.numPages + ' page(s). Select month and click Import Shifts.');
-    } catch(e) {
-      feedback('err', '⚠ Could not read PDF: ' + e.message);
+      i = j;
     }
+    // Deduplicate by date+startTime
+    const seen = new Set();
+    const deduped = parsed.filter(p => {
+      const k = p.date+'_'+p.startTime;
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    return { parsed: deduped, errors };
   }
 
-  function importSchedule() {
+    function importSchedule() {
     const text = extractedPdfText;
     const ym   = document.getElementById('importMonth').value;
     const mode = document.getElementById('importMode').value;
