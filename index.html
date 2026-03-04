@@ -21,7 +21,6 @@
   h1 { font-size:clamp(2rem,6vw,3.2rem); font-weight:800; line-height:1.05; letter-spacing:-.03em; }
   h1 span { color:var(--accent); }
   .subtitle { margin-top:.75rem; color:var(--muted); font-size:.95rem; }
-
   .rates { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.75rem; margin-bottom:2rem; animation:fadeUp .6s .1s ease both; }
   .rate-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.9rem 1rem; position:relative; overflow:hidden; }
   .rate-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
@@ -34,7 +33,6 @@
   .rate-card.r15 .rate-val { color:var(--accent2); }
   .rate-card.r2  .rate-val { color:var(--danger); }
   .rate-desc { font-size:.72rem; color:var(--muted); margin-top:.2rem; }
-
   /* Cycle */
   .cycle-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:2rem; animation:fadeUp .6s .15s ease both; }
   .cycle-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; gap:1rem; }
@@ -53,36 +51,51 @@
   .progress-labels { display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:.65rem; color:var(--muted); }
   .btn-edit-cycle { background:none; border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:.68rem; padding:.25rem .6rem; border-radius:6px; cursor:pointer; transition:all .15s; white-space:nowrap; }
   .btn-edit-cycle:hover { border-color:var(--accent); color:var(--accent); }
-
+  /* Import */
+  .import-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; animation:fadeUp .6s .18s ease both; }
+  .import-box h2 { font-size:1rem; font-weight:700; margin-bottom:.5rem; letter-spacing:-.01em; }
+  .import-desc { font-size:.8rem; color:var(--muted); margin-bottom:1rem; line-height:1.6; }
+  .import-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  .pdf-drop { border:2px dashed var(--border); border-radius:10px; padding:2rem 1rem; text-align:center; cursor:pointer; transition:all .2s; position:relative; margin-bottom:1rem; }
+  .pdf-drop:hover, .pdf-drop.drag { border-color:var(--accent3); background:rgba(53,200,241,.04); }
+  .pdf-drop input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .pdf-drop-icon { font-size:2rem; margin-bottom:.5rem; }
+  .pdf-drop-label { font-size:.85rem; color:var(--muted); }
+  .pdf-drop-label strong { color:var(--accent3); }
+  .pdf-filename { font-family:'DM Mono',monospace; font-size:.75rem; color:var(--accent); margin-top:.5rem; display:none; }
+  select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.65rem .9rem; width:100%; outline:none; cursor:pointer; }
+  input[type="month"] { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.65rem .9rem; width:100%; outline:none; -webkit-appearance:none; }
+  input[type="month"]:focus, select:focus { border-color:var(--accent); }
+  .import-actions { display:flex; gap:.75rem; margin-top:.75rem; }
+  .btn-import { background:var(--accent3); color:#0f0f11; flex:2; justify-content:center; }
+  .btn-import:hover { background:#5dd5f5; }
+  .btn-clear { background:none; border:1px solid var(--border); color:var(--muted); font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; padding:.75rem 1.25rem; border-radius:8px; cursor:pointer; transition:all .15s; flex:1; }
+  .btn-clear:hover { border-color:var(--danger); color:var(--danger); }
+  .import-feedback { font-family:'DM Mono',monospace; font-size:.75rem; margin-top:.75rem; padding:.6rem .9rem; border-radius:8px; display:none; line-height:1.5; }
+  .import-feedback.ok  { background:rgba(200,241,53,.08); color:var(--accent);  border:1px solid rgba(200,241,53,.25); display:block; }
+  .import-feedback.err { background:rgba(241,53,96,.08);  color:var(--danger); border:1px solid rgba(241,53,96,.25);  display:block; }
   /* Modal */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:1rem; }
   .modal-overlay.open { display:flex; }
   .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.75rem; width:100%; max-width:380px; animation:fadeUp .25s ease both; }
   .modal h3 { font-size:1.1rem; font-weight:700; margin-bottom:1.25rem; letter-spacing:-.02em; }
   .modal-actions { display:flex; gap:.75rem; margin-top:1.25rem; }
-
   /* Form */
   .add-shift { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; animation:fadeUp .6s .2s ease both; }
   .add-shift h2 { font-size:1rem; font-weight:700; margin-bottom:1.25rem; letter-spacing:-.01em; }
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
   .form-group { display:flex; flex-direction:column; gap:.4rem; }
   label { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
-  input[type="date"], input[type="time"], input[type="number"] {
-    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
-    color:var(--text); font-family:'DM Mono',monospace; font-size:.9rem;
-    padding:.65rem .9rem; width:100%; outline:none; transition:border-color .2s; -webkit-appearance:none;
-  }
+  input[type="date"], input[type="time"], input[type="number"] { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.9rem; padding:.65rem .9rem; width:100%; outline:none; transition:border-color .2s; -webkit-appearance:none; }
   input:focus { border-color:var(--accent); }
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator { filter:invert(.6); cursor:pointer; }
+  input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter:invert(.6); cursor:pointer; }
   .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.5rem; border-radius:8px; font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; cursor:pointer; border:none; transition:all .15s; letter-spacing:-.01em; }
-  .btn-primary { background:var(--accent); color:#0f0f11; width:100%; justify-content:center; }
+  .btn-primary   { background:var(--accent); color:#0f0f11; width:100%; justify-content:center; }
   .btn-primary:hover { background:#d9ff40; transform:translateY(-1px); }
   .btn-secondary { background:var(--surface2); color:var(--text); flex:1; justify-content:center; }
   .btn-secondary:hover { background:var(--border); }
   .btn-save { background:var(--accent); color:#0f0f11; flex:1; justify-content:center; }
   .btn-save:hover { background:#d9ff40; }
-
   /* Shifts */
   .shifts-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; animation:fadeUp .6s .3s ease both; }
   .shifts-header h2 { font-size:1rem; font-weight:700; letter-spacing:-.01em; }
@@ -113,10 +126,9 @@
   .grand-total-label { font-size:.85rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.1em; }
   .grand-total-val   { font-family:'DM Mono',monospace; font-size:2rem; font-weight:500; color:var(--accent); letter-spacing:-.02em; }
   .grand-total-sub   { font-family:'DM Mono',monospace; font-size:.75rem; color:var(--muted); margin-top:.2rem; }
-
   @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
-  @media(max-width:480px){ .form-row{grid-template-columns:1fr} .rates{grid-template-columns:repeat(2,1fr)} h1{font-size:2rem} .cycle-top{flex-direction:column} }
+  @media(max-width:480px){ .form-row,.import-row{grid-template-columns:1fr} .rates{grid-template-columns:repeat(2,1fr)} h1{font-size:2rem} .cycle-top{flex-direction:column} }
 </style>
 </head>
 <body>
@@ -135,7 +147,7 @@
     <div class="rate-card r2"><div class="rate-time">22:00 – 07:00</div><div class="rate-val">2.0×</div><div class="rate-desc">2 pts per 5 min</div></div>
   </div>
 
-  <!-- Cycle Progress Box -->
+  <!-- Cycle Progress -->
   <div class="cycle-box">
     <div class="cycle-top">
       <div>
@@ -150,13 +162,8 @@
         <button class="btn-edit-cycle" onclick="openModal()">Edit cycle</button>
       </div>
     </div>
-    <div class="progress-track">
-      <div class="progress-fill safe" id="progressFill" style="width:0%"></div>
-    </div>
-    <div class="progress-labels">
-      <span id="progressPct">0%</span>
-      <span id="progressMax">Max: 1606 pts</span>
-    </div>
+    <div class="progress-track"><div class="progress-fill safe" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-labels"><span id="progressPct">0%</span><span id="progressMax">Max: 1606 pts</span></div>
   </div>
 
   <!-- Edit Cycle Modal -->
@@ -172,16 +179,44 @@
     </div>
   </div>
 
-  <!-- Add Shift Form -->
+  <!-- Import Schedule -->
+  <div class="import-box">
+    <h2>↓ Import Schedule</h2>
+    <p class="import-desc">
+      Select your schedule PDF — times are extracted automatically and converted from UTC to Spanish local time.
+    </p>
+    <div class="pdf-drop" id="pdfDrop" onclick="document.getElementById('pdfFile').click()">
+      <input type="file" id="pdfFile" accept=".pdf" onchange="handlePdfFile(this.files[0])">
+      <div class="pdf-drop-icon">📄</div>
+      <div class="pdf-drop-label">Drop your PDF here or <strong>click to browse</strong></div>
+      <div class="pdf-filename" id="pdfFilename"></div>
+    </div>
+    <div class="import-row">
+      <div class="form-group"><label>Schedule Month &amp; Year</label><input type="month" id="importMonth"></div>
+      <div class="form-group"><label>Import Mode</label>
+        <select id="importMode">
+          <option value="append">Add to existing shifts</option>
+          <option value="replace">Replace all shifts</option>
+        </select>
+      </div>
+    </div>
+    <div class="import-actions">
+      <button class="btn btn-import" id="btnImport" onclick="importSchedule()" disabled style="opacity:.4;cursor:not-allowed">Import Shifts</button>
+      <button class="btn-clear" onclick="clearImport()">Clear</button>
+    </div>
+    <div class="import-feedback" id="importFeedback"></div>
+  </div>
+
+  <!-- Manual Add -->
   <div class="add-shift">
-    <h2>+ Add Shift</h2>
+    <h2>+ Add Shift Manually</h2>
     <div class="form-row">
       <div class="form-group"><label>Date</label><input type="date" id="shiftDate"></div>
       <div></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Start Time</label><input type="time" id="startTime"></div>
-      <div class="form-group"><label>End Time</label><input type="time" id="endTime"></div>
+      <div class="form-group"><label>Start Time (local)</label><input type="time" id="startTime"></div>
+      <div class="form-group"><label>End Time (local)</label><input type="time" id="endTime"></div>
     </div>
     <button class="btn btn-primary" onclick="addShift()">Calculate &amp; Add Shift</button>
   </div>
@@ -190,131 +225,320 @@
     <h2>Your Shifts</h2>
     <div class="total-badge" id="totalBadge">0 pts total</div>
   </div>
-
   <div class="shifts-list" id="shiftsList">
-    <div class="empty-state"><div class="empty-icon">🗓</div>No shifts added yet.<br>Enter your first shift above.</div>
+    <div class="empty-state"><div class="empty-icon">🗓</div>No shifts added yet.<br>Import your schedule or add one above.</div>
   </div>
 
 </div>
-
 <script>
   document.getElementById('shiftDate').valueAsDate = new Date();
+  const now = new Date();
+  document.getElementById('importMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 
   let shifts = JSON.parse(localStorage.getItem('shifts') || '[]');
   let cycle  = JSON.parse(localStorage.getItem('cycle')  || 'null') || { start: '2025-02-16', max: 1606 };
 
+  // ── Cycle modal ───────────────────────────────────────────────────────────
   function saveCycleToStorage() { localStorage.setItem('cycle', JSON.stringify(cycle)); }
-
-  function openModal() {
-    document.getElementById('cycleStart').value = cycle.start;
-    document.getElementById('cycleMax').value   = cycle.max;
-    document.getElementById('modalOverlay').classList.add('open');
-  }
+  function openModal() { document.getElementById('cycleStart').value=cycle.start; document.getElementById('cycleMax').value=cycle.max; document.getElementById('modalOverlay').classList.add('open'); }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function saveCycle() {
-    const s = document.getElementById('cycleStart').value;
-    const m = parseInt(document.getElementById('cycleMax').value);
-    if (!s || !m || m < 1) { alert('Please fill in valid values.'); return; }
-    cycle.start = s; cycle.max = m;
-    saveCycleToStorage(); closeModal(); render();
+    const s=document.getElementById('cycleStart').value, m=parseInt(document.getElementById('cycleMax').value);
+    if (!s||!m||m<1) { alert('Please fill in valid values.'); return; }
+    cycle.start=s; cycle.max=m; saveCycleToStorage(); closeModal(); render();
   }
-  document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
-  const BOUNDARIES = [
-    { from: 0,     to: 420,  rate: 2.0 },
-    { from: 420,   to: 540,  rate: 1.5 },
-    { from: 540,   to: 1200, rate: 1.0 },
-    { from: 1200,  to: 1320, rate: 1.5 },
-    { from: 1320,  to: 1440, rate: 2.0 },
-  ];
-
-  function toHHMM(m) {
-    const h = Math.floor(m / 60) % 24, mn = m % 60;
-    return String(h).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
+  // ── Spain DST ─────────────────────────────────────────────────────────────
+  function lastSunday(year, month) {
+    const last = new Date(year, month, 0);
+    return last.getDate() - last.getDay();
   }
-
-  function calcPoints(startMin, endMin) {
-    let segments = [], totalPoints = 0;
-    const ext = [...BOUNDARIES, ...BOUNDARIES.map(b => ({ from: b.from+1440, to: b.to+1440, rate: b.rate }))];
-    for (const seg of ext) {
-      const oS = Math.max(startMin, seg.from), oE = Math.min(endMin, seg.to);
-      if (oE <= oS) continue;
-      const minutes = oE - oS, points = (minutes / 5) * seg.rate;
-      segments.push({ from: toHHMM(oS % 1440), to: toHHMM(oE % 1440 === 0 && oE !== oS ? 0 : oE % 1440), minutes, rate: seg.rate, points });
-      totalPoints += points;
+  function spainOffset(dateStr) {
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m-1, d);
+    const dstOn  = new Date(y, 2, lastSunday(y, 3));   // last Sun March
+    const dstOff = new Date(y, 9, lastSunday(y, 10));  // last Sun October
+    return (date >= dstOn && date < dstOff) ? 120 : 60;
+  }
+  function utcToSpain(dateStr, hhmm) {
+    const h=parseInt(hhmm.slice(0,2)), m=parseInt(hhmm.slice(2,4));
+    let total = h*60 + m + spainOffset(dateStr);
+    let [y,mo,d] = dateStr.split('-').map(Number);
+    if (total >= 1440) {
+      total -= 1440;
+      const next = new Date(y, mo-1, d+1);
+      dateStr = next.toISOString().split('T')[0];
     }
-    return { segments, totalPoints };
+    return { dateStr, time: String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0') };
   }
 
-  function addShift() {
-    const d = document.getElementById('shiftDate').value;
-    const s = document.getElementById('startTime').value;
-    const e = document.getElementById('endTime').value;
-    if (!d || !s || !e) { alert('Please fill in date, start time and end time.'); return; }
-    const [sh, sm] = s.split(':').map(Number);
-    let [eh, em]   = e.split(':').map(Number);
-    let sMin = sh*60+sm, eMin = eh*60+em;
-    if (eMin <= sMin) eMin += 1440;
-    const { segments, totalPoints } = calcPoints(sMin, eMin);
-    shifts.push({ id: Date.now(), date: d, startTime: s, endTime: e, segments, totalPoints });
-    shifts.sort((a,b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+  // ── Schedule parser ───────────────────────────────────────────────────────
+  function parseSchedule(text, yearMonth) {
+    const [year, month] = yearMonth.split('-').map(Number);
+    const lines = text.split('\n').map(l => l.trimEnd()).filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Need at least 2 rows.');
+
+    // Find header row: first row containing day tokens like Mon02
+    const DAY_RE = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(\d{1,2})$/i;
+    let headerLine = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].split(/\s+/).some(t => DAY_RE.test(t))) { headerLine = i; break; }
+    }
+    if (headerLine < 0) throw new Error('No day headers found (e.g. Mon02 Tue03).');
+
+    const rawHeader = lines[headerLine];
+    const headerTokens = rawHeader.split(/\s+/);
+
+    // Build column map: dayNum -> character start position in raw header
+    const columns = [];
+    let pos = 0;
+    for (const tok of headerTokens) {
+      const idx = rawHeader.indexOf(tok, pos);
+      const m = tok.match(DAY_RE);
+      if (m) columns.push({ dayNum: parseInt(m[2]), charPos: idx });
+      pos = idx + tok.length;
+    }
+    if (!columns.length) throw new Error('Could not parse day columns.');
+
+    // Gather time tokens from all data rows, assign to nearest column by char position
+    const colTimes = columns.map(() => []);
+    for (let i = headerLine + 1; i < lines.length; i++) {
+      const line = lines[i];
+      const tokenRe = /\S+/g;
+      let m;
+      while ((m = tokenRe.exec(line)) !== null) {
+        const tok = m[0], tokPos = m.index;
+        if (!/^\d{4}$/.test(tok)) continue; // only 4-digit times
+        // Assign to nearest column
+        let best = 0, bestDist = Infinity;
+        columns.forEach((col, ci) => {
+          const d = Math.abs(tokPos - col.charPos);
+          if (d < bestDist) { bestDist = d; best = ci; }
+        });
+        colTimes[best].push(tok);
+      }
+    }
+
+    const parsed = [], errors = [];
+    columns.forEach((col, i) => {
+      const times = colTimes[i];
+      if (!times.length) return; // off day
+      if (times.length !== 2) {
+        errors.push('Day ' + col.dayNum + ': expected 2 times, got [' + times.join(',') + ']');
+        return;
+      }
+      const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(col.dayNum).padStart(2,'0');
+      const start = utcToSpain(dateStr, times[0]);
+      const end   = utcToSpain(dateStr, times[1]);
+      parsed.push({ date: start.dateStr, startTime: start.time, endTime: end.time });
+    });
+    return { parsed, errors };
+  }
+
+  // ── PDF handling ──────────────────────────────────────────────────────────
+  let extractedPdfText = '';
+
+  // Load pdf.js from CDN
+  const pdfScript = document.createElement('script');
+  pdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  document.head.appendChild(pdfScript);
+  pdfScript.onload = () => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  };
+
+  // Drag and drop support
+  const dropZone = document.getElementById('pdfDrop');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') handlePdfFile(file);
+    else feedback('err', 'Please drop a PDF file.');
+  });
+
+  async function handlePdfFile(file) {
+    if (!file) return;
+    feedback('ok', '⏳ Reading PDF…');
+    document.getElementById('pdfFilename').textContent = file.name;
+    document.getElementById('pdfFilename').style.display = 'block';
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        // Reconstruct lines using y-position grouping
+        const items = content.items.filter(i => i.str.trim());
+        // Group by Y position (same line = within 3px)
+        const lines = [];
+        for (const item of items) {
+          const y = Math.round(item.transform[5]);
+          const existing = lines.find(l => Math.abs(l.y - y) < 4);
+          if (existing) {
+            existing.parts.push({ x: item.transform[4], text: item.str });
+          } else {
+            lines.push({ y, parts: [{ x: item.transform[4], text: item.str }] });
+          }
+        }
+        // Sort lines top-to-bottom, parts left-to-right
+        lines.sort((a,b) => b.y - a.y);
+        for (const line of lines) {
+          line.parts.sort((a,b) => a.x - b.x);
+          // Reconstruct with approximate spacing based on x positions
+          let lineStr = '';
+          let lastX = null;
+          for (const part of line.parts) {
+            if (lastX !== null) {
+              const gap = part.x - lastX;
+              const spaces = Math.max(1, Math.round(gap / 6));
+              lineStr += ' '.repeat(spaces);
+            }
+            lineStr += part.text;
+            lastX = part.x + (part.width || part.text.length * 6);
+          }
+          fullText += lineStr.trimEnd() + '\n';
+        }
+        fullText += '\n';
+      }
+      extractedPdfText = fullText;
+      document.getElementById('btnImport').disabled = false;
+      document.getElementById('btnImport').style.opacity = '1';
+      document.getElementById('btnImport').style.cursor = 'pointer';
+      feedback('ok', '✓ PDF loaded: ' + pdf.numPages + ' page(s). Select month and click Import Shifts.');
+    } catch(e) {
+      feedback('err', '⚠ Could not read PDF: ' + e.message);
+    }
+  }
+
+  function importSchedule() {
+    const text = extractedPdfText;
+    const ym   = document.getElementById('importMonth').value;
+    const mode = document.getElementById('importMode').value;
+    if (!text.trim()) { feedback('err','Please select a PDF first.'); return; }
+    if (!ym)          { feedback('err','Please select the schedule month and year.'); return; }
+
+    let parsed, errors;
+    try { ({ parsed, errors } = parseSchedule(text, ym)); }
+    catch(e) { feedback('err','⚠ ' + e.message); return; }
+
+    if (!parsed.length) { feedback('err', 'No shifts found. ' + (errors.length ? errors.join('; ') : 'Check format.')); return; }
+
+    const newShifts = parsed.map(p => {
+      const [sh,sm] = p.startTime.split(':').map(Number);
+      let [eh,em]   = p.endTime.split(':').map(Number);
+      let sMin=sh*60+sm, eMin=eh*60+em;
+      if (eMin<=sMin) eMin+=1440;
+      const {segments,totalPoints} = calcPoints(sMin,eMin);
+      return { id: Date.now()+Math.random(), date:p.date, startTime:p.startTime, endTime:p.endTime, segments, totalPoints };
+    });
+
+    let skipped = 0;
+    if (mode === 'replace') {
+      shifts = newShifts;
+    } else {
+      const existing = new Set(shifts.map(s => s.date+'_'+s.startTime));
+      const toAdd = newShifts.filter(s => !existing.has(s.date+'_'+s.startTime));
+      skipped = newShifts.length - toAdd.length;
+      shifts = [...shifts, ...toAdd];
+    }
+
+    shifts.sort((a,b) => a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
     save(); render();
+
+    let msg = '✓ Imported ' + parsed.length + ' shift' + (parsed.length!==1?'s':'') + '.';
+    if (skipped)       msg += '  ' + skipped + ' duplicate(s) skipped.';
+    if (errors.length) msg += '  ⚠ ' + errors.join('; ');
+    feedback('ok', msg);
   }
 
-  function deleteShift(id) { shifts = shifts.filter(s => s.id !== id); save(); render(); }
-  function toggleCard(id)   { document.querySelector('.shift-card[data-id="'+id+'"]')?.classList.toggle('open'); }
-  function save()           { localStorage.setItem('shifts', JSON.stringify(shifts)); }
-  function fmt(n)           { return n % 1 === 0 ? n : n.toFixed(1); }
-
-  function fmtDate(d) {
-    const [y,m,day] = d.split('-');
-    return new Date(y, m-1, day).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+  function feedback(type, msg) {
+    const el = document.getElementById('importFeedback');
+    el.className = 'import-feedback ' + type;
+    el.textContent = msg;
   }
-  function fmtDateShort(d) {
-    const [y,m,day] = d.split('-');
-    return new Date(y, m-1, day).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-  }
-  function dotClass(r) { return r === 1.0 ? 'dot-1' : r === 1.5 ? 'dot-15' : 'dot-2'; }
-
-  function renderCycle(total) {
-    const end = new Date(cycle.start.replace(/-/g, '/'));
-    end.setDate(end.getDate() + 27);
-    const endStr = end.toISOString().split('T')[0];
-    document.getElementById('cycleMeta').textContent = fmtDateShort(cycle.start) + ' – ' + fmtDateShort(endStr);
-    const pct = Math.min(100, (total / cycle.max) * 100);
-    const remaining = cycle.max - total;
-    document.getElementById('cycleUsed').innerHTML = fmt(total) + ' <span>/ ' + cycle.max + '</span>';
-    document.getElementById('cycleRemaining').textContent = total > cycle.max
-      ? fmt(total - cycle.max) + ' over limit!'
-      : fmt(remaining) + ' remaining';
-    document.getElementById('progressPct').textContent = pct.toFixed(1) + '%';
-    document.getElementById('progressMax').textContent = 'Max: ' + cycle.max + ' pts';
-    const fill = document.getElementById('progressFill');
-    fill.style.width = pct + '%';
-    fill.className = 'progress-fill ' + (pct >= 100 ? 'danger' : pct >= 80 ? 'warn' : 'safe');
+  function clearImport() {
+    extractedPdfText = '';
+    document.getElementById('pdfFile').value = '';
+    document.getElementById('pdfFilename').style.display = 'none';
+    document.getElementById('pdfFilename').textContent = '';
+    document.getElementById('btnImport').disabled = true;
+    document.getElementById('btnImport').style.opacity = '.4';
+    document.getElementById('btnImport').style.cursor = 'not-allowed';
+    const el = document.getElementById('importFeedback');
+    el.className = 'import-feedback'; el.textContent = '';
   }
 
-  function render() {
-    const list  = document.getElementById('shiftsList');
-    const badge = document.getElementById('totalBadge');
-    const grandTotal = shifts.reduce((s, sh) => s + sh.totalPoints, 0);
-    badge.textContent = fmt(grandTotal) + ' pts total';
-    renderCycle(grandTotal);
-
-    if (shifts.length === 0) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓</div>No shifts added yet.<br>Enter your first shift above.</div>';
-      const gt = document.getElementById('grandTotal');
-      if (gt) gt.remove();
-      return;
+  // ── Points ────────────────────────────────────────────────────────────────
+  const BOUNDARIES = [
+    {from:0,    to:420,  rate:2.0},
+    {from:420,  to:540,  rate:1.5},
+    {from:540,  to:1200, rate:1.0},
+    {from:1200, to:1320, rate:1.5},
+    {from:1320, to:1440, rate:2.0},
+  ];
+  function toHHMM(m){ const h=Math.floor(m/60)%24,mn=m%60; return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0'); }
+  function calcPoints(sMin,eMin){
+    let segs=[],total=0;
+    const ext=[...BOUNDARIES,...BOUNDARIES.map(b=>({from:b.from+1440,to:b.to+1440,rate:b.rate}))];
+    for(const seg of ext){
+      const oS=Math.max(sMin,seg.from),oE=Math.min(eMin,seg.to);
+      if(oE<=oS) continue;
+      const mins=oE-oS,pts=(mins/5)*seg.rate;
+      segs.push({from:toHHMM(oS%1440),to:toHHMM(oE%1440===0&&oE!==oS?0:oE%1440),minutes:mins,rate:seg.rate,points:pts});
+      total+=pts;
     }
+    return {segments:segs,totalPoints:total};
+  }
 
-    list.innerHTML = shifts.map(sh => `
+  function addShift(){
+    const d=document.getElementById('shiftDate').value,s=document.getElementById('startTime').value,e=document.getElementById('endTime').value;
+    if(!d||!s||!e){alert('Please fill in all fields.');return;}
+    const [sh,sm]=s.split(':').map(Number);let[eh,em]=e.split(':').map(Number);
+    let sMin=sh*60+sm,eMin=eh*60+em; if(eMin<=sMin) eMin+=1440;
+    const{segments,totalPoints}=calcPoints(sMin,eMin);
+    shifts.push({id:Date.now(),date:d,startTime:s,endTime:e,segments,totalPoints});
+    shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
+    save();render();
+  }
+  function deleteShift(id){shifts=shifts.filter(s=>s.id!==id);save();render();}
+  function toggleCard(id){document.querySelector('.shift-card[data-id="'+id+'"]')?.classList.toggle('open');}
+  function save(){localStorage.setItem('shifts',JSON.stringify(shifts));}
+  function fmt(n){return n%1===0?n:n.toFixed(1);}
+  function fmtDate(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+  function fmtShort(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+  function dotClass(r){return r===1.0?'dot-1':r===1.5?'dot-15':'dot-2';}
+
+  function renderCycle(total){
+    const end=new Date(cycle.start.replace(/-/g,'/')); end.setDate(end.getDate()+27);
+    document.getElementById('cycleMeta').textContent=fmtShort(cycle.start)+' – '+fmtShort(end.toISOString().split('T')[0]);
+    const pct=Math.min(100,(total/cycle.max)*100);
+    document.getElementById('cycleUsed').innerHTML=fmt(total)+' <span>/ '+cycle.max+'</span>';
+    document.getElementById('cycleRemaining').textContent=total>cycle.max?fmt(total-cycle.max)+' over limit!':fmt(cycle.max-total)+' remaining';
+    document.getElementById('progressPct').textContent=pct.toFixed(1)+'%';
+    document.getElementById('progressMax').textContent='Max: '+cycle.max+' pts';
+    const fill=document.getElementById('progressFill');
+    fill.style.width=pct+'%';
+    fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
+  }
+
+  function render(){
+    const list=document.getElementById('shiftsList'),badge=document.getElementById('totalBadge');
+    const grand=shifts.reduce((s,sh)=>s+sh.totalPoints,0);
+    badge.textContent=fmt(grand)+' pts total';
+    renderCycle(grand);
+    if(!shifts.length){
+      list.innerHTML='<div class="empty-state"><div class="empty-icon">🗓</div>No shifts yet.<br>Import your schedule or add one above.</div>';
+      const gt=document.getElementById('grandTotal');if(gt)gt.remove();return;
+    }
+    list.innerHTML=shifts.map(sh=>`
       <div class="shift-card" data-id="${sh.id}">
         <div class="shift-card-header" onclick="toggleCard(${sh.id})">
-          <div>
-            <div class="shift-date">${fmtDate(sh.date)}</div>
-            <div class="shift-time">${sh.startTime} – ${sh.endTime}</div>
-          </div>
+          <div><div class="shift-date">${fmtDate(sh.date)}</div><div class="shift-time">${sh.startTime} – ${sh.endTime}</div></div>
           <div class="shift-right">
             <div class="shift-total">${fmt(sh.totalPoints)} pts</div>
             <span class="chevron">▼</span>
@@ -324,43 +548,14 @@
         <div class="shift-breakdown">
           <table class="breakdown-table">
             <thead><tr><th>Period</th><th>Duration</th><th>Rate</th><th>Points</th></tr></thead>
-            <tbody>
-              ${sh.segments.map(seg => `
-                <tr>
-                  <td>${seg.from} – ${seg.to}</td>
-                  <td>${seg.minutes}m</td>
-                  <td><span class="rate-dot ${dotClass(seg.rate)}"></span>${seg.rate}×</td>
-                  <td>${fmt(seg.points)}</td>
-                </tr>`).join('')}
-            </tbody>
+            <tbody>${sh.segments.map(seg=>`<tr><td>${seg.from} – ${seg.to}</td><td>${seg.minutes}m</td><td><span class="rate-dot ${dotClass(seg.rate)}"></span>${seg.rate}×</td><td>${fmt(seg.points)}</td></tr>`).join('')}</tbody>
           </table>
         </div>
       </div>`).join('');
-
-    let gt = document.getElementById('grandTotal');
-    if (!gt) {
-      gt = document.createElement('div');
-      gt.id = 'grandTotal';
-      gt.className = 'grand-total';
-      list.parentNode.appendChild(gt);
-    }
-    const totalMins = shifts.reduce((s, sh) => {
-      const [sh2, sm2] = sh.startTime.split(':').map(Number);
-      let [eh, em] = sh.endTime.split(':').map(Number);
-      let start = sh2*60+sm2, end = eh*60+em;
-      if (end <= start) end += 1440;
-      return s + (end - start);
-    }, 0);
-    const hrs = Math.floor(totalMins / 60), mins = totalMins % 60;
-    gt.innerHTML = `
-      <div>
-        <div class="grand-total-label">Grand Total</div>
-        <div class="grand-total-sub">${shifts.length} shift${shifts.length !== 1 ? 's' : ''} · ${hrs}h ${mins}m</div>
-      </div>
-      <div>
-        <div class="grand-total-val">${fmt(grandTotal)}</div>
-        <div class="grand-total-sub" style="text-align:right">points</div>
-      </div>`;
+    let gt=document.getElementById('grandTotal');
+    if(!gt){gt=document.createElement('div');gt.id='grandTotal';gt.className='grand-total';list.parentNode.appendChild(gt);}
+    const tm=shifts.reduce((s,sh)=>{const[sh2,sm2]=sh.startTime.split(':').map(Number);let[eh,em]=sh.endTime.split(':').map(Number);let st=sh2*60+sm2,en=eh*60+em;if(en<=st)en+=1440;return s+(en-st);},0);
+    gt.innerHTML=`<div><div class="grand-total-label">Grand Total</div><div class="grand-total-sub">${shifts.length} shift${shifts.length!==1?'s':''} · ${Math.floor(tm/60)}h ${tm%60}m</div></div><div><div class="grand-total-val">${fmt(grand)}</div><div class="grand-total-sub" style="text-align:right">points</div></div>`;
   }
 
   render();
