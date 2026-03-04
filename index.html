@@ -71,6 +71,11 @@
   .btn-import:hover { background:#5dd5f5; }
   .btn-clear { background:none; border:1px solid var(--border); color:var(--muted); font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; padding:.75rem 1.25rem; border-radius:8px; cursor:pointer; transition:all .15s; flex:1; }
   .btn-clear:hover { border-color:var(--danger); color:var(--danger); }
+  .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; padding:.6rem 1.1rem; border-radius:8px; cursor:pointer; transition:all .15s; }
+  .btn-danger:hover { background:var(--danger); color:#fff; }
+  .reset-bar { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.5rem; margin-bottom:2rem; animation:fadeUp .6s .35s ease both; }
+  .reset-bar-label { font-size:.85rem; color:var(--muted); }
+  .reset-bar-label strong { color:var(--text); display:block; font-size:.9rem; margin-bottom:.15rem; }
   .import-feedback { font-family:'DM Mono',monospace; font-size:.75rem; margin-top:.75rem; padding:.6rem .9rem; border-radius:8px; display:none; line-height:1.5; }
   .import-feedback.ok  { background:rgba(200,241,53,.08); color:var(--accent);  border:1px solid rgba(200,241,53,.25); display:block; }
   .import-feedback.err { background:rgba(241,53,96,.08);  color:var(--danger); border:1px solid rgba(241,53,96,.25);  display:block; }
@@ -219,6 +224,18 @@
       <div class="form-group"><label>End Time (local)</label><input type="time" id="endTime"></div>
     </div>
     <button class="btn btn-primary" onclick="addShift()">Calculate &amp; Add Shift</button>
+  </div>
+
+  <!-- Reset bar -->
+  <div class="reset-bar">
+    <div class="reset-bar-label">
+      <strong>Manage Data</strong>
+      Clear all shifts or reset everything including cycle settings
+    </div>
+    <div style="display:flex;gap:.6rem;flex-shrink:0">
+      <button class="btn-danger" onclick="confirmClearShifts()">Clear shifts</button>
+      <button class="btn-danger" onclick="confirmResetAll()">Reset all</button>
+    </div>
   </div>
 
   <div class="shifts-header">
@@ -460,6 +477,25 @@
     if(!gt){gt=document.createElement('div');gt.id='grandTotal';gt.className='grand-total';list.parentNode.appendChild(gt);}
     const tm=shifts.reduce((s,sh)=>{const[sh2,sm2]=sh.startTime.split(':').map(Number);let[eh,em]=sh.endTime.split(':').map(Number);let st=sh2*60+sm2,en=eh*60+em;if(en<=st)en+=1440;return s+(en-st);},0);
     gt.innerHTML=`<div><div class="grand-total-label">Grand Total</div><div class="grand-total-sub">${shifts.length} shift${shifts.length!==1?'s':''} · ${Math.floor(tm/60)}h ${tm%60}m</div></div><div><div class="grand-total-val">${fmt(grand)}</div><div class="grand-total-sub" style="text-align:right">points</div></div>`;
+  }
+
+  function confirmClearShifts() {
+    if (!shifts.length) { alert('No shifts to clear.'); return; }
+    if (confirm('Delete all ' + shifts.length + ' shift' + (shifts.length !== 1 ? 's' : '') + '? This cannot be undone.')) {
+      shifts = [];
+      save();
+      render();
+    }
+  }
+
+  function confirmResetAll() {
+    if (confirm('Reset everything? This will delete all shifts AND reset cycle settings to defaults. Cannot be undone.')) {
+      shifts = [];
+      cycle = { start: '2025-02-16', max: 1606 };
+      localStorage.removeItem('shifts');
+      localStorage.removeItem('cycle');
+      render();
+    }
   }
 
   render();
