@@ -51,6 +51,19 @@
   .progress-labels { display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:.65rem; color:var(--muted); }
   .btn-edit-cycle { background:none; border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:.68rem; padding:.25rem .6rem; border-radius:6px; cursor:pointer; transition:all .15s; white-space:nowrap; }
   .btn-edit-cycle:hover { border-color:var(--accent); color:var(--accent); }
+  .cycle-box2 { background:var(--surface); border:1px solid var(--accent3); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:2rem; display:none; }
+  .cycle-box2 .cycle-title { color:var(--accent3); }
+  .override-btn { background:none; border:none; color:var(--muted); font-size:.75rem; font-family:'DM Mono',monospace; cursor:pointer; padding:.1rem .3rem; border-radius:4px; transition:color .15s; margin-left:.4rem; }
+  .override-btn:hover { color:var(--accent2); }
+  .override-badge { font-family:'DM Mono',monospace; font-size:.65rem; color:var(--accent2); margin-left:.3rem; vertical-align:middle; }
+  .override-input-row { display:flex; align-items:center; gap:.5rem; padding:.6rem 1.25rem; background:var(--surface2); border-top:1px solid var(--border); }
+  .override-input-row label { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); white-space:nowrap; }
+  .override-input-row input { background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.35rem .6rem; width:90px; outline:none; }
+  .override-input-row input:focus { border-color:var(--accent2); }
+  .btn-override-save { background:var(--accent2); color:#0f0f11; border:none; border-radius:6px; font-family:'Syne',sans-serif; font-weight:700; font-size:.8rem; padding:.35rem .75rem; cursor:pointer; }
+  .btn-override-save:hover { background:#f5b84a; }
+  .btn-override-clear { background:none; border:1px solid var(--border); color:var(--muted); border-radius:6px; font-family:'Syne',sans-serif; font-size:.8rem; padding:.35rem .75rem; cursor:pointer; }
+  .btn-override-clear:hover { border-color:var(--danger); color:var(--danger); }
   /* Import */
   .import-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; animation:fadeUp .6s .18s ease both; }
   .import-box h2 { font-size:1rem; font-weight:700; margin-bottom:.5rem; letter-spacing:-.01em; }
@@ -170,6 +183,38 @@
     <div class="progress-labels"><span id="progressPct">0%</span><span id="progressMax">Max: 1606 pts</span></div>
   </div>
 
+  <!-- Second Cycle Card (shown when shifts span into next cycle) -->
+  <div class="cycle-box2" id="cycleBox2">
+    <div class="cycle-top">
+      <div>
+        <div class="cycle-title">Next Cycle</div>
+        <div class="cycle-meta" id="cycleMeta2"></div>
+      </div>
+      <div class="cycle-right">
+        <div class="cycle-numbers">
+          <div class="cycle-used" id="cycleUsed2">0 <span>/ —</span></div>
+          <div class="cycle-remaining" id="cycleRemaining2">no max set</div>
+        </div>
+        <button class="btn-edit-cycle" onclick="openModal2()">Set max</button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill safe" id="progressFill2" style="width:0%"></div></div>
+    <div class="progress-labels"><span id="progressPct2">0%</span><span id="progressMax2">Set a max to track</span></div>
+  </div>
+
+  <!-- Edit Next Cycle Modal -->
+  <div class="modal-overlay" id="modalOverlay2">
+    <div class="modal">
+      <h3>Next Cycle Settings</h3>
+      <div class="form-group" style="margin-bottom:1rem"><label>Cycle Start Date</label><input type="date" id="cycleStart2"></div>
+      <div class="form-group"><label>Max Points</label><input type="number" id="cycleMax2" min="1" step="1"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal2()">Cancel</button>
+        <button class="btn btn-save" onclick="saveCycle2()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Cycle Modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
@@ -268,6 +313,58 @@
     cycle.start=s; cycle.max=m; saveCycleToStorage(); closeModal(); render();
   }
   document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+  // ── Cycle 2 ──────────────────────────────────────────────────────────────
+  let cycle2 = JSON.parse(localStorage.getItem('cycle2') || 'null') || { start: null, max: null };
+  function saveCycle2ToStorage() { localStorage.setItem('cycle2', JSON.stringify(cycle2)); }
+
+  function openModal2() {
+    // Default start = cycle.start + 28 days
+    if (!cycle2.start) {
+      const d = new Date(cycle.start.replace(/-/g,'/'));
+      d.setDate(d.getDate() + 28);
+      document.getElementById('cycleStart2').value = d.toISOString().split('T')[0];
+    } else {
+      document.getElementById('cycleStart2').value = cycle2.start;
+    }
+    document.getElementById('cycleMax2').value = cycle2.max || '';
+    document.getElementById('modalOverlay2').classList.add('open');
+  }
+  function closeModal2() { document.getElementById('modalOverlay2').classList.remove('open'); }
+  function saveCycle2() {
+    const s = document.getElementById('cycleStart2').value;
+    const m = parseInt(document.getElementById('cycleMax2').value);
+    if (!s) { alert('Please set a start date.'); return; }
+    cycle2.start = s; cycle2.max = m || null;
+    saveCycle2ToStorage(); closeModal2(); render();
+  }
+  document.getElementById('modalOverlay2').addEventListener('click', function(e){ if(e.target===this) closeModal2(); });
+
+  // ── Override points ───────────────────────────────────────────────────────
+  function toggleOverride(id) {
+    const row = document.getElementById('override-row-' + id);
+    if (row) row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  function saveOverride(id) {
+    const val = parseFloat(document.getElementById('override-val-' + id).value);
+    if (isNaN(val) || val < 0) { alert('Enter a valid points value.'); return; }
+    const sh = shifts.find(s => s.id == id);
+    if (!sh) return;
+    sh.manualPoints = val;
+    save(); render();
+  }
+
+  function clearOverride(id) {
+    const sh = shifts.find(s => s.id == id);
+    if (!sh) return;
+    delete sh.manualPoints;
+    save(); render();
+  }
+
+  function effectivePoints(sh) {
+    return sh.manualPoints !== undefined ? sh.manualPoints : sh.totalPoints;
+  }
 
   // ── PDF handling ──────────────────────────────────────────────────────────
   let extractedPdfText = '';
@@ -523,22 +620,47 @@
   function fmtShort(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
   function dotClass(r){return r===1.0?'dot-1':r===1.5?'dot-15':'dot-2';}
 
-  function renderCycle(total){
-    const end=new Date(cycle.start.replace(/-/g,'/')); end.setDate(end.getDate()+27);
-    document.getElementById('cycleMeta').textContent=fmtShort(cycle.start)+' – '+fmtShort(end.toISOString().split('T')[0]);
-    const pct=Math.min(100,(total/cycle.max)*100);
-    document.getElementById('cycleUsed').innerHTML=fmt(total)+' <span>/ '+cycle.max+'</span>';
-    document.getElementById('cycleRemaining').textContent=total>cycle.max?fmt(total-cycle.max)+' over limit!':fmt(cycle.max-total)+' remaining';
-    document.getElementById('progressPct').textContent=pct.toFixed(1)+'%';
-    document.getElementById('progressMax').textContent='Max: '+cycle.max+' pts';
-    const fill=document.getElementById('progressFill');
-    fill.style.width=pct+'%';
-    fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
+  function cycleEnd(c) {
+    const d=new Date(c.start.replace(/-/g,'/'));d.setDate(d.getDate()+27);return d.toISOString().split('T')[0];
+  }
+  function inCycle(sh,c) {
+    if(!c||!c.start) return false;const end=cycleEnd(c);return sh.date>=c.start&&sh.date<=end;
+  }
+  function renderCycleCard(ids,total,cycleObj) {
+    const end=cycleEnd(cycleObj);
+    document.getElementById(ids.meta).textContent=fmtShort(cycleObj.start)+' – '+fmtShort(end);
+    const max=cycleObj.max;
+    document.getElementById(ids.used).innerHTML=fmt(total)+' <span>/ '+(max||'—')+'</span>';
+    if (max) {
+      const pct=Math.min(100,(total/max)*100);
+      document.getElementById(ids.remaining).textContent=total>max?fmt(total-max)+' over limit!':fmt(max-total)+' remaining';
+      document.getElementById(ids.pct).textContent=pct.toFixed(1)+'%';
+      document.getElementById(ids.maxlbl).textContent='Max: '+max+' pts';
+      const fill=document.getElementById(ids.fill);fill.style.width=pct+'%';
+      fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
+    } else {
+      document.getElementById(ids.remaining).textContent='No max set';
+      document.getElementById(ids.pct).textContent='—';
+      document.getElementById(ids.maxlbl).textContent='Click “Set max” to track';
+      document.getElementById(ids.fill).style.width='0%';
+    }
+  }
+  function renderCycle(grandTotal) {
+    const total1=shifts.reduce((s,sh)=>inCycle(sh,cycle)?s+effectivePoints(sh):s,0);
+    renderCycleCard({meta:'cycleMeta',used:'cycleUsed',remaining:'cycleRemaining',pct:'progressPct',maxlbl:'progressMax',fill:'progressFill'},total1,cycle);
+    const hasOverflow=shifts.some(sh=>!inCycle(sh,cycle));
+    const box2=document.getElementById('cycleBox2');
+    if (hasOverflow) {
+      box2.style.display='block';
+      if (!cycle2.start){const d=new Date(cycle.start.replace(/-/g,'/'));d.setDate(d.getDate()+28);cycle2.start=d.toISOString().split('T')[0];}
+      const total2=shifts.reduce((s,sh)=>inCycle(sh,cycle2)?s+effectivePoints(sh):s,0);
+      renderCycleCard({meta:'cycleMeta2',used:'cycleUsed2',remaining:'cycleRemaining2',pct:'progressPct2',maxlbl:'progressMax2',fill:'progressFill2'},total2,cycle2);
+    } else { box2.style.display='none'; }
   }
 
-  function render(){
+    function render(){
     const list=document.getElementById('shiftsList'),badge=document.getElementById('totalBadge');
-    const grand=shifts.reduce((s,sh)=>s+sh.totalPoints,0);
+    const grand=shifts.reduce((s,sh)=>s+effectivePoints(sh),0);
     badge.textContent=fmt(grand)+' pts total';
     renderCycle(grand);
     if(!shifts.length){
@@ -550,7 +672,8 @@
         <div class="shift-card-header" onclick="toggleCard(${sh.id})">
           <div><div class="shift-date">${fmtDate(sh.date)}</div><div class="shift-time">${sh.startTime} – ${sh.endTime}</div></div>
           <div class="shift-right">
-            <div class="shift-total">${fmt(sh.totalPoints)} pts</div>
+            <div class="shift-total">${fmt(effectivePoints(sh))} pts${sh.manualPoints!==undefined?'<span class="override-badge" title="Manually overridden">✎</span>':''}</div>
+            <button class="override-btn" onclick="event.stopPropagation();toggleOverride(${sh.id})" title="Override points">✎</button>
             <span class="chevron">▼</span>
             <button class="btn-delete" onclick="event.stopPropagation();deleteShift(${sh.id})">✕</button>
           </div>
@@ -560,6 +683,12 @@
             <thead><tr><th>Period</th><th>Duration</th><th>Rate</th><th>Points</th></tr></thead>
             <tbody>${sh.segments.map(seg=>`<tr><td>${seg.from} – ${seg.to}</td><td>${seg.minutes}m</td><td><span class="rate-dot ${dotClass(seg.rate)}"></span>${seg.rate}×</td><td>${fmt(seg.points)}</td></tr>`).join('')}</tbody>
           </table>
+        </div>
+        <div class="override-input-row" id="override-row-${sh.id}" style="display:none">
+          <label>Override points:</label>
+          <input type="number" id="override-val-${sh.id}" min="0" step="0.5" value="${sh.manualPoints!==undefined?sh.manualPoints:fmt(sh.totalPoints)}" onclick="event.stopPropagation()">
+          <button class="btn-override-save" onclick="event.stopPropagation();saveOverride(${sh.id})">Save</button>
+          <button class="btn-override-clear" onclick="event.stopPropagation();clearOverride(${sh.id})">Reset</button>
         </div>
       </div>`).join('');
     let gt=document.getElementById('grandTotal');
