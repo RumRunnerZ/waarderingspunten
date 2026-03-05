@@ -164,61 +164,42 @@
     <div class="rate-card r2"><div class="rate-time">22:00 – 07:00</div><div class="rate-val">2.0×</div><div class="rate-desc">2 pts per 5 min</div></div>
   </div>
 
-  <!-- Cycle Progress -->
-  <div class="cycle-box">
-    <div class="cycle-top">
-      <div>
-        <div class="cycle-title">Current Cycle</div>
-        <div class="cycle-meta" id="cycleMeta"></div>
-      </div>
-      <div class="cycle-right">
-        <div class="cycle-numbers">
-          <div class="cycle-used" id="cycleUsed">0 <span>/ 1606</span></div>
-          <div class="cycle-remaining" id="cycleRemaining">1606 remaining</div>
-        </div>
-        <button class="btn-edit-cycle" onclick="openModal()">Edit cycle</button>
-      </div>
-    </div>
-    <div class="progress-track"><div class="progress-fill safe" id="progressFill" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct">0%</span><span id="progressMax">Max: 1606 pts</span></div>
-  </div>
-
   <!-- Current Cycle -->
   <div class="cycle-box">
     <div class="cycle-top">
       <div>
-        <div class="cycle-title" id="cycleTitle1">Current Cycle</div>
+        <div class="cycle-title">Current Cycle</div>
         <div class="cycle-meta" id="cycleMeta1"></div>
       </div>
       <div class="cycle-right">
         <div class="cycle-numbers">
-          <div class="cycle-used" id="cycleUsed1">0 <span>/ —</span></div>
+          <div class="cycle-used" id="cycleUsed1">0 <span>/ 1606</span></div>
           <div class="cycle-remaining" id="cycleRemaining1"></div>
         </div>
         <button class="btn-edit-cycle" onclick="openModalA()">Edit max</button>
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill safe" id="progressFill1" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct1">—</span><span id="progressMax1"></span></div>
+    <div class="progress-labels"><span id="progressPct1">0%</span><span id="progressMax1">Max: 1606 pts</span></div>
   </div>
 
   <!-- Next Cycle -->
-  <div class="cycle-box2" id="cycleBox2" style="display:block">
+  <div class="cycle-box2" style="display:block">
     <div class="cycle-top">
       <div>
-        <div class="cycle-title" id="cycleTitle2">Next Cycle</div>
+        <div class="cycle-title">Next Cycle</div>
         <div class="cycle-meta" id="cycleMeta2"></div>
       </div>
       <div class="cycle-right">
         <div class="cycle-numbers">
-          <div class="cycle-used" id="cycleUsed2">0 <span>/ —</span></div>
+          <div class="cycle-used" id="cycleUsed2">0 <span>/ 1606</span></div>
           <div class="cycle-remaining" id="cycleRemaining2"></div>
         </div>
         <button class="btn-edit-cycle" onclick="openModalB()">Edit max</button>
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill safe" id="progressFill2" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct2">—</span><span id="progressMax2"></span></div>
+    <div class="progress-labels"><span id="progressPct2">0%</span><span id="progressMax2">Max: 1606 pts</span></div>
   </div>
 
   <!-- Shared Cycle Edit Modal -->
@@ -332,21 +313,22 @@
   }
 
   // Per-cycle max points stored by index
-  let cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || '{}');
+  let cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || 'null');
+  if (!cycleMeta) { cycleMeta = {}; }  // defaults handled in getCycleMax
   function saveCycleMeta() { localStorage.setItem('cycleMeta', JSON.stringify(cycleMeta)); }
 
   // Modals for current (A) and next (B) cycle
   function openModalA() {
     const idx = currentCycleIndex();
-    document.getElementById('editCycleLabel').textContent = 'Current Cycle Max Points';
-    document.getElementById('editCycleMax').value = cycleMeta[idx] || '';
+    document.getElementById('editCycleLabel').textContent = 'Current Cycle — Max Points';
+    document.getElementById('editCycleMax').value = getCycleMax(idx);
     document.getElementById('editCycleIdx').value = idx;
     document.getElementById('modalOverlay').classList.add('open');
   }
   function openModalB() {
     const idx = currentCycleIndex() + 1;
-    document.getElementById('editCycleLabel').textContent = 'Next Cycle Max Points';
-    document.getElementById('editCycleMax').value = cycleMeta[idx] || '';
+    document.getElementById('editCycleLabel').textContent = 'Next Cycle — Max Points';
+    document.getElementById('editCycleMax').value = getCycleMax(idx);
     document.getElementById('editCycleIdx').value = idx;
     document.getElementById('modalOverlay').classList.add('open');
   }
@@ -354,7 +336,7 @@
   function saveCycleModal() {
     const idx = parseInt(document.getElementById('editCycleIdx').value);
     const val = parseInt(document.getElementById('editCycleMax').value);
-    if (val > 0) cycleMeta[idx] = val; else delete cycleMeta[idx];
+    cycleMeta[idx] = (val > 0) ? val : 1606;
     saveCycleMeta(); closeModal(); render();
   }
   document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
@@ -558,22 +540,16 @@
 
   // ── Render cycle cards ────────────────────────────────────────────────────
   function renderCycleCard(ids, total, idx) {
-    const start=cycleStartFor(idx), end=cycleEndFor(idx), max=cycleMeta[idx]||null;
+    const start=cycleStartFor(idx), end=cycleEndFor(idx), max=getCycleMax(idx);
     document.getElementById(ids.meta).textContent=fmtShort(start)+' – '+fmtShort(end);
-    document.getElementById(ids.used).innerHTML=fmt(total)+' <span>/ '+(max||'—')+'</span>';
-    if(max){
-      const pct=Math.min(100,(total/max)*100);
-      document.getElementById(ids.remaining).textContent=total>max?fmt(total-max)+' over limit!':fmt(max-total)+' remaining';
-      document.getElementById(ids.pct).textContent=pct.toFixed(1)+'%';
-      document.getElementById(ids.maxlbl).textContent='Max: '+max+' pts';
-      const fill=document.getElementById(ids.fill);fill.style.width=pct+'%';
-      fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
-    } else {
-      document.getElementById(ids.remaining).textContent='No max set';
-      document.getElementById(ids.pct).textContent='—';
-      document.getElementById(ids.maxlbl).textContent='Click "Edit cycle" to set max';
-      const fill=document.getElementById(ids.fill);fill.style.width='0%';fill.className='progress-fill safe';
-    }
+    document.getElementById(ids.used).innerHTML=fmt(total)+' <span>/ '+max+'</span>';
+    const pct=Math.min(100,(total/max)*100);
+    document.getElementById(ids.remaining).textContent=total>max?fmt(total-max)+' over limit!':fmt(max-total)+' remaining';
+    document.getElementById(ids.pct).textContent=pct.toFixed(1)+'%';
+    document.getElementById(ids.maxlbl).textContent='Max: '+max+' pts';
+    const fill=document.getElementById(ids.fill);
+    fill.style.width=pct+'%';
+    fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
   }
 
   function cycleStartFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28);return d.toISOString().split('T')[0];}
