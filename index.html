@@ -301,7 +301,7 @@
   document.getElementById('importMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 
   let shifts = JSON.parse(localStorage.getItem('shifts') || '[]');
-  let cycle  = JSON.parse(localStorage.getItem('cycle')  || 'null') || { start: '2025-02-16', max: 1606 };
+  let cycle  = JSON.parse(localStorage.getItem('cycle')  || 'null') || { start: '2026-03-16', max: 1606 };
 
   // ── Cycle modal ───────────────────────────────────────────────────────────
   function saveCycleToStorage() { localStorage.setItem('cycle', JSON.stringify(cycle)); }
@@ -709,7 +709,7 @@
   function confirmResetAll() {
     if (confirm('Reset everything? This will delete all shifts AND reset cycle settings to defaults. Cannot be undone.')) {
       shifts = [];
-      cycle = { start: '2025-02-16', max: 1606 };
+      cycle = { start: '2026-03-16', max: 1606 };
       localStorage.removeItem('shifts');
       localStorage.removeItem('cycle');
       render();
