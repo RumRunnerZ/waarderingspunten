@@ -307,12 +307,11 @@
   document.getElementById('importMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 
   let shifts = JSON.parse(localStorage.getItem('shifts') || '[]');
+  const ANCHOR = '2026-02-16';
 
   // ── Cycle system ──────────────────────────────────────────────────────────
   // All cycles are 28-day blocks anchored at 2026-02-16.
   // We always show the cycle TODAY falls in, and the next one.
-  const ANCHOR = '2026-02-16';
-
   function anchorDate() { return new Date(ANCHOR.replace(/-/g,'/')); }
 
   function currentCycleIndex() {
@@ -579,8 +578,6 @@
 
   function cycleStartFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28);return d.toISOString().split('T')[0];}
   function cycleEndFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28+27);return d.toISOString().split('T')[0];}
-
-  const ANCHOR = '2026-02-16';
 
   // ── Confirm clear ─────────────────────────────────────────────────────────
   function confirmClearShifts(){
