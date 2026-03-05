@@ -316,6 +316,8 @@
   let cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || 'null');
   if (!cycleMeta) { cycleMeta = {}; }  // defaults handled in getCycleMax
   function saveCycleMeta() { localStorage.setItem('cycleMeta', JSON.stringify(cycleMeta)); }
+  function getCycleMax(idx) { return cycleMeta[idx] || 1606; }
+  function setCycleMax(idx, val) { cycleMeta[idx] = val; saveCycleMeta(); }
 
   // Modals for current (A) and next (B) cycle
   function openModalA() {
