@@ -3,624 +3,807 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Credit Points Calculator</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>KLC Credit Points</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #0f0f11; --surface: #1a1a1f; --surface2: #222228; --border: #2e2e38;
-    --accent: #c8f135; --accent2: #f1a435; --accent3: #35c8f1;
-    --text: #e8e8f0; --muted: #7a7a8c; --danger: #f13560;
+    --bg: #0f0f11; --surface: #17171a; --surface2: #1e1e22; --border: #2a2a30;
+    --text: #e8e8ee; --muted: #666678;
+    --accent: #7c6af7; --accent2: #f0b429; --accent3: #4ecdc4;
+    --danger: #ff5757; --warn: #f0b429;
   }
-  body { background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; min-height:100vh; padding:2rem 1rem 4rem; position:relative; overflow-x:hidden; }
-  body::before { content:''; position:fixed; top:-200px; left:-200px; width:600px; height:600px; background:radial-gradient(circle,rgba(200,241,53,.06) 0%,transparent 70%); pointer-events:none; z-index:0; }
-  body::after  { content:''; position:fixed; bottom:-200px; right:-200px; width:500px; height:500px; background:radial-gradient(circle,rgba(53,200,241,.05) 0%,transparent 70%); pointer-events:none; z-index:0; }
-  .container { max-width:720px; margin:0 auto; position:relative; z-index:1; }
-  header { margin-bottom:3rem; animation:fadeDown .6s ease both; }
-  .label-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:.7rem; letter-spacing:.15em; color:var(--accent); border:1px solid var(--accent); padding:.2rem .6rem; border-radius:2px; margin-bottom:1rem; text-transform:uppercase; }
-  h1 { font-size:clamp(2rem,6vw,3.2rem); font-weight:800; line-height:1.05; letter-spacing:-.03em; }
-  h1 span { color:var(--accent); }
-  .subtitle { margin-top:.75rem; color:var(--muted); font-size:.95rem; }
-  .rates { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.75rem; margin-bottom:2rem; animation:fadeUp .6s .1s ease both; }
-  .rate-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.9rem 1rem; position:relative; overflow:hidden; }
-  .rate-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-  .rate-card.r1::before  { background:var(--accent3); }
-  .rate-card.r15::before { background:var(--accent2); }
-  .rate-card.r2::before  { background:var(--danger); }
-  .rate-time { font-family:'DM Mono',monospace; font-size:.72rem; color:var(--muted); margin-bottom:.3rem; }
-  .rate-val  { font-size:1.4rem; font-weight:700; letter-spacing:-.02em; }
-  .rate-card.r1  .rate-val { color:var(--accent3); }
-  .rate-card.r15 .rate-val { color:var(--accent2); }
-  .rate-card.r2  .rate-val { color:var(--danger); }
-  .rate-desc { font-size:.72rem; color:var(--muted); margin-top:.2rem; }
-  /* Cycle */
-  .cycle-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:2rem; animation:fadeUp .6s .15s ease both; }
-  .cycle-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; gap:1rem; }
-  .cycle-title { font-size:.85rem; font-weight:700; letter-spacing:-.01em; }
-  .cycle-meta  { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); margin-top:.15rem; }
-  .cycle-right { display:flex; align-items:center; gap:.75rem; flex-shrink:0; }
-  .cycle-numbers { text-align:right; }
-  .cycle-used { font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:500; letter-spacing:-.02em; }
-  .cycle-used span { color:var(--muted); font-size:.8rem; }
-  .cycle-remaining { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); margin-top:.1rem; }
-  .progress-track { background:var(--surface2); border-radius:100px; height:8px; overflow:hidden; margin-bottom:.6rem; }
-  .progress-fill { height:100%; border-radius:100px; transition:width .5s cubic-bezier(.4,0,.2,1),background .3s; }
-  .progress-fill.safe   { background:var(--accent); }
-  .progress-fill.warn   { background:var(--accent2); }
-  .progress-fill.danger { background:var(--danger); }
-  .progress-labels { display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:.65rem; color:var(--muted); }
-  .btn-edit-cycle { background:none; border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:.68rem; padding:.25rem .6rem; border-radius:6px; cursor:pointer; transition:all .15s; white-space:nowrap; }
-  .btn-edit-cycle:hover { border-color:var(--accent); color:var(--accent); }
-  .cycle-box2 { background:var(--surface); border:1px solid var(--accent3); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:2rem; display:none; }
-  .cycle-box2 .cycle-title { color:var(--accent3); }
-  .override-btn { background:none; border:none; color:var(--muted); font-size:.75rem; font-family:'DM Mono',monospace; cursor:pointer; padding:.1rem .3rem; border-radius:4px; transition:color .15s; margin-left:.4rem; }
-  .override-btn:hover { color:var(--accent2); }
-  .override-badge { font-family:'DM Mono',monospace; font-size:.65rem; color:var(--accent2); margin-left:.3rem; vertical-align:middle; }
-  .override-input-row { display:flex; align-items:center; gap:.5rem; padding:.6rem 1.25rem; background:var(--surface2); border-top:1px solid var(--border); }
-  .override-input-row label { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); white-space:nowrap; }
-  .override-input-row input { background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.35rem .6rem; width:90px; outline:none; }
-  .override-input-row input:focus { border-color:var(--accent2); }
-  .btn-override-save { background:var(--accent2); color:#0f0f11; border:none; border-radius:6px; font-family:'Syne',sans-serif; font-weight:700; font-size:.8rem; padding:.35rem .75rem; cursor:pointer; }
-  .btn-override-save:hover { background:#f5b84a; }
-  .btn-override-clear { background:none; border:1px solid var(--border); color:var(--muted); border-radius:6px; font-family:'Syne',sans-serif; font-size:.8rem; padding:.35rem .75rem; cursor:pointer; }
-  .btn-override-clear:hover { border-color:var(--danger); color:var(--danger); }
-  /* Import */
-  .import-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; animation:fadeUp .6s .18s ease both; }
-  .import-box h2 { font-size:1rem; font-weight:700; margin-bottom:.5rem; letter-spacing:-.01em; }
-  .import-desc { font-size:.8rem; color:var(--muted); margin-bottom:1rem; line-height:1.6; }
-  .import-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-  .pdf-drop { border:2px dashed var(--border); border-radius:10px; padding:2rem 1rem; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:1rem; }
-  .pdf-drop:hover, .pdf-drop.drag { border-color:var(--accent3); background:rgba(53,200,241,.04); }
-  .pdf-drop-icon { font-size:2rem; margin-bottom:.5rem; }
-  .pdf-drop-label { font-size:.85rem; color:var(--muted); }
-  .pdf-drop-label strong { color:var(--accent3); }
-  .pdf-filename { font-family:'DM Mono',monospace; font-size:.75rem; color:var(--accent); margin-top:.5rem; display:none; }
-  select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.65rem .9rem; width:100%; outline:none; cursor:pointer; }
-  input[type="month"] { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; padding:.65rem .9rem; width:100%; outline:none; -webkit-appearance:none; }
-  input[type="month"]:focus, select:focus { border-color:var(--accent); }
-  .import-actions { display:flex; gap:.75rem; margin-top:.75rem; }
-  .btn-import { background:var(--accent3); color:#0f0f11; flex:2; justify-content:center; }
-  .btn-import:hover { background:#5dd5f5; }
-  .btn-clear { background:none; border:1px solid var(--border); color:var(--muted); font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; padding:.75rem 1.25rem; border-radius:8px; cursor:pointer; transition:all .15s; flex:1; }
-  .btn-clear:hover { border-color:var(--danger); color:var(--danger); }
-  .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem; padding:.6rem 1.1rem; border-radius:8px; cursor:pointer; transition:all .15s; }
-  .btn-danger:hover { background:var(--danger); color:#fff; }
-  .reset-bar { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1rem 1.5rem; margin-bottom:2rem; animation:fadeUp .6s .35s ease both; }
-  .reset-bar-label { font-size:.85rem; color:var(--muted); }
-  .reset-bar-label strong { color:var(--text); display:block; font-size:.9rem; margin-bottom:.15rem; }
-  .import-feedback { font-family:'DM Mono',monospace; font-size:.75rem; margin-top:.75rem; padding:.6rem .9rem; border-radius:8px; display:none; line-height:1.5; }
-  .import-feedback.ok  { background:rgba(200,241,53,.08); color:var(--accent);  border:1px solid rgba(200,241,53,.25); display:block; }
-  .import-feedback.err { background:rgba(241,53,96,.08);  color:var(--danger); border:1px solid rgba(241,53,96,.25);  display:block; }
-  /* Modal */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:1rem; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.75rem; width:100%; max-width:380px; animation:fadeUp .25s ease both; }
-  .modal h3 { font-size:1.1rem; font-weight:700; margin-bottom:1.25rem; letter-spacing:-.02em; }
-  .modal-actions { display:flex; gap:.75rem; margin-top:1.25rem; }
-  /* Form */
-  .add-shift { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:2rem; animation:fadeUp .6s .2s ease both; }
-  .add-shift h2 { font-size:1rem; font-weight:700; margin-bottom:1.25rem; letter-spacing:-.01em; }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-  .form-group { display:flex; flex-direction:column; gap:.4rem; }
-  label { font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
-  input[type="date"], input[type="time"], input[type="number"] { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:.9rem; padding:.65rem .9rem; width:100%; outline:none; transition:border-color .2s; -webkit-appearance:none; }
-  input:focus { border-color:var(--accent); }
-  input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter:invert(.6); cursor:pointer; }
-  .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.5rem; border-radius:8px; font-family:'Syne',sans-serif; font-weight:700; font-size:.9rem; cursor:pointer; border:none; transition:all .15s; letter-spacing:-.01em; }
-  .btn-primary   { background:var(--accent); color:#0f0f11; width:100%; justify-content:center; }
-  .btn-primary:hover { background:#d9ff40; transform:translateY(-1px); }
-  .btn-secondary { background:var(--surface2); color:var(--text); flex:1; justify-content:center; }
-  .btn-secondary:hover { background:var(--border); }
-  .btn-save { background:var(--accent); color:#0f0f11; flex:1; justify-content:center; }
-  .btn-save:hover { background:#d9ff40; }
-  /* Shifts */
-  .shifts-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; animation:fadeUp .6s .3s ease both; }
-  .shifts-header h2 { font-size:1rem; font-weight:700; letter-spacing:-.01em; }
-  .total-badge { background:var(--accent); color:#0f0f11; font-family:'DM Mono',monospace; font-size:.8rem; font-weight:500; padding:.3rem .8rem; border-radius:100px; }
-  .shifts-list { display:flex; flex-direction:column; gap:.75rem; }
-  .empty-state { background:var(--surface); border:1px dashed var(--border); border-radius:14px; padding:3rem; text-align:center; color:var(--muted); font-size:.9rem; }
-  .empty-icon { font-size:2rem; margin-bottom:.75rem; }
-  .shift-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:fadeUp .3s ease both; }
-  .shift-card-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; cursor:pointer; user-select:none; }
-  .shift-card-header:hover { background:var(--surface2); }
-  .shift-date  { font-family:'DM Mono',monospace; font-size:.75rem; color:var(--muted); }
-  .shift-time  { font-weight:700; font-size:1rem; letter-spacing:-.02em; }
-  .shift-right { display:flex; align-items:center; gap:1rem; }
-  .shift-total { font-family:'DM Mono',monospace; font-size:1rem; font-weight:500; color:var(--accent); }
-  .btn-delete  { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; padding:.2rem; transition:color .15s; line-height:1; }
-  .btn-delete:hover { color:var(--danger); }
-  .chevron { color:var(--muted); font-size:.8rem; transition:transform .2s; }
-  .shift-card.open .chevron { transform:rotate(180deg); }
-  .shift-breakdown { display:none; border-top:1px solid var(--border); padding:1rem 1.25rem; }
-  .shift-card.open .shift-breakdown { display:block; }
-  .breakdown-table { width:100%; border-collapse:collapse; font-family:'DM Mono',monospace; font-size:.78rem; }
-  .breakdown-table th { text-align:left; color:var(--muted); font-weight:400; padding:0 .5rem .5rem; border-bottom:1px solid var(--border); letter-spacing:.05em; text-transform:uppercase; font-size:.68rem; }
-  .breakdown-table td { padding:.5rem; border-bottom:1px solid rgba(255,255,255,.04); }
-  .breakdown-table tr:last-child td { border-bottom:none; }
-  .rate-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:.4rem; }
-  .dot-1 { background:var(--accent3); } .dot-15 { background:var(--accent2); } .dot-2 { background:var(--danger); }
-  .grand-total { background:var(--surface); border:1px solid var(--accent); border-radius:14px; padding:1.5rem; margin-top:1.5rem; display:flex; align-items:center; justify-content:space-between; }
-  .grand-total-label { font-size:.85rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.1em; }
-  .grand-total-val   { font-family:'DM Mono',monospace; font-size:2rem; font-weight:500; color:var(--accent); letter-spacing:-.02em; }
-  .grand-total-sub   { font-family:'DM Mono',monospace; font-size:.75rem; color:var(--muted); margin-top:.2rem; }
-  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
-  @media(max-width:480px){ .form-row,.import-row{grid-template-columns:1fr} .rates{grid-template-columns:repeat(2,1fr)} h1{font-size:2rem} .cycle-top{flex-direction:column} }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+  .app { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+  .header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; }
+  .header h1 span { color: var(--accent); }
+  .total-badge { font-family: 'DM Mono', monospace; font-size: .8rem; color: var(--accent2); background: rgba(240,180,41,.1); border: 1px solid rgba(240,180,41,.25); border-radius: 20px; padding: .3rem .8rem; }
+
+  .cycle-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .cycle-card.next { border-color: rgba(78,205,196,.3); }
+  .cycle-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .cycle-label { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .25rem; }
+  .cycle-card.next .cycle-label { color: var(--accent3); }
+  .cycle-dates { font-family: 'DM Mono', monospace; font-size: .8rem; }
+  .cycle-right { display: flex; align-items: center; gap: .75rem; }
+  .cycle-pts-val { font-family: 'DM Mono', monospace; font-size: 1.4rem; font-weight: 500; line-height: 1; text-align: right; }
+  .cycle-pts-val span { font-size: .85rem; color: var(--muted); }
+  .cycle-pts-rem { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted); margin-top: .2rem; text-align: right; }
+  .cycle-pts-rem.over { color: var(--danger); }
+  .btn-edit { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'Syne', sans-serif; font-size: .7rem; font-weight: 600; padding: .3rem .65rem; border-radius: 6px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+  .progress-track { background: var(--surface2); border-radius: 99px; height: 6px; overflow: hidden; margin-bottom: .4rem; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width .4s ease; background: var(--accent); }
+  .progress-fill.warn { background: var(--warn); }
+  .progress-fill.danger { background: var(--danger); }
+  .progress-meta { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: .68rem; color: var(--muted); }
+
+  .section-label { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; margin-top: 1.75rem; }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; margin-bottom: .75rem; }
+  .form-group label { display: block; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+  .form-group input, .form-group select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: .85rem; padding: .55rem .75rem; outline: none; transition: border-color .15s; -webkit-appearance: none; appearance: none; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .btn-add { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem; padding: .65rem; cursor: pointer; transition: opacity .15s; }
+  .btn-add:hover { opacity: .85; }
+
+  .import-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+  .pdf-zone { border: 1.5px dashed var(--border); border-radius: 8px; padding: .85rem; text-align: center; cursor: pointer; font-size: .8rem; color: var(--muted); transition: all .15s; margin-bottom: .75rem; }
+  .pdf-zone:hover, .pdf-zone.drag { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,.05); }
+  .pdf-name { color: var(--accent2); font-family: 'DM Mono', monospace; font-size: .75rem; margin-top: .3rem; display: none; }
+  .import-row { display: grid; grid-template-columns: 1fr auto auto; gap: .75rem; align-items: end; margin-bottom: .75rem; }
+  .btn-import { background: var(--accent3); color: #0f0f11; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .85rem; padding: .55rem 1rem; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
+  .btn-import:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-import:not(:disabled):hover { opacity: .85; }
+  .feedback { font-family: 'DM Mono', monospace; font-size: .75rem; padding: .4rem .6rem; border-radius: 6px; display: none; }
+  .feedback.ok { display: block; background: rgba(78,205,196,.1); color: var(--accent3); }
+  .feedback.err { display: block; background: rgba(255,87,87,.1); color: var(--danger); }
+  .debug-btn { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted); cursor: pointer; background: none; border: none; padding: .4rem 0 0; display: block; }
+  .debug-btn:hover { color: var(--text); }
+  #debugText { width: 100%; height: 120px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: .65rem; padding: .5rem; margin-top: .4rem; resize: vertical; display: none; }
+
+  .shift-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: .6rem; overflow: hidden; }
+  .shift-head { display: flex; justify-content: space-between; align-items: center; padding: .9rem 1.25rem; cursor: pointer; user-select: none; }
+  .shift-head:hover { background: var(--surface2); }
+  .shift-date { font-size: .9rem; font-weight: 700; }
+  .shift-time { font-family: 'DM Mono', monospace; font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+  .shift-right { display: flex; align-items: center; gap: .5rem; }
+  .shift-pts { font-family: 'DM Mono', monospace; font-size: .95rem; font-weight: 500; color: var(--accent2); }
+  .ov-badge { font-size: .6rem; color: var(--accent3); margin-left: .2rem; }
+  .btn-ov { background: none; border: none; color: var(--muted); font-size: .75rem; cursor: pointer; padding: .15rem .3rem; border-radius: 4px; }
+  .btn-ov:hover { color: var(--accent2); }
+  .chevron { color: var(--muted); font-size: .65rem; transition: transform .2s; pointer-events: none; }
+  .shift-card.open .chevron { transform: rotate(180deg); }
+  .btn-del { background: none; border: none; color: var(--muted); font-size: .85rem; cursor: pointer; padding: .15rem .3rem; border-radius: 4px; line-height: 1; }
+  .btn-del:hover { color: var(--danger); }
+  .shift-body { display: none; border-top: 1px solid var(--border); }
+  .shift-card.open .shift-body { display: block; }
+  .breakdown-table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: .75rem; }
+  .breakdown-table th { text-align: left; padding: .5rem 1.25rem .3rem; color: var(--muted); font-weight: 400; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; }
+  .breakdown-table td { padding: .3rem 1.25rem; }
+  .breakdown-table tr:last-child td { padding-bottom: .65rem; }
+  .rdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: .35rem; vertical-align: middle; }
+  .d1{background:#4ecdc4} .d15{background:#f0b429} .d2{background:#ff5757}
+  .ov-row { display: none; align-items: center; gap: .5rem; padding: .6rem 1.25rem; background: var(--surface2); border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .ov-row label { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted); white-space: nowrap; }
+  .ov-row input { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Mono', monospace; font-size: .85rem; padding: .3rem .55rem; width: 80px; outline: none; }
+  .ov-row input:focus { border-color: var(--accent2); }
+  .btn-ov-save { background: var(--accent2); color: #0f0f11; border: none; border-radius: 6px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .75rem; padding: .3rem .65rem; cursor: pointer; }
+  .btn-ov-reset { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; font-family: 'Syne', sans-serif; font-size: .75rem; padding: .3rem .65rem; cursor: pointer; }
+  .btn-ov-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+  .empty-icon { font-size: 2rem; margin-bottom: .75rem; }
+
+  .grand-total { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+  .gt-label { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .gt-sub { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted); margin-top: .15rem; }
+  .gt-val { font-family: 'DM Mono', monospace; font-size: 1.6rem; font-weight: 500; color: var(--accent2); text-align: right; }
+
+  .reset-bar { display: flex; gap: .5rem; justify-content: flex-end; margin-top: 2.5rem; }
+  .btn-reset { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'Syne', sans-serif; font-size: .7rem; font-weight: 600; padding: .3rem .75rem; border-radius: 6px; cursor: pointer; transition: all .15s; }
+  .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 340px; }
+  .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; }
+  .modal .fg { margin-bottom: 1rem; }
+  .modal .fg label { display: block; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .35rem; }
+  .modal .fg input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: .9rem; padding: .55rem .75rem; outline: none; }
+  .modal .fg input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: .5rem; justify-content: flex-end; margin-top: 1.25rem; }
+  .btn-cancel { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'Syne', sans-serif; font-size: .85rem; padding: .5rem 1rem; border-radius: 8px; cursor: pointer; }
+  .btn-save { background: var(--accent); color: #fff; border: none; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .85rem; padding: .5rem 1.25rem; border-radius: 8px; cursor: pointer; }
+  .btn-save:hover { opacity: .85; }
+
+  @media (max-width: 500px) {
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .import-row { grid-template-columns: 1fr 1fr; }
+    .import-row .btn-import { grid-column: 1 / -1; }
+  }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="app">
 
-  <header>
-    <div class="label-tag">Work Tracker</div>
-    <h1>Credit <span>Points</span><br>Calculator</h1>
-    <p class="subtitle">Enter your shifts — points are calculated automatically per time zone.</p>
-  </header>
-
-  <div class="rates">
-    <div class="rate-card r1"><div class="rate-time">09:00 – 20:00</div><div class="rate-val">1.0×</div><div class="rate-desc">1 pt per 5 min</div></div>
-    <div class="rate-card r15"><div class="rate-time">07:00 – 09:00</div><div class="rate-val">1.5×</div><div class="rate-desc">1.5 pts per 5 min</div></div>
-    <div class="rate-card r15"><div class="rate-time">20:00 – 22:00</div><div class="rate-val">1.5×</div><div class="rate-desc">1.5 pts per 5 min</div></div>
-    <div class="rate-card r2"><div class="rate-time">22:00 – 07:00</div><div class="rate-val">2.0×</div><div class="rate-desc">2 pts per 5 min</div></div>
+  <div class="header">
+    <h1>KLC <span>Credit</span> Points</h1>
+    <div class="total-badge" id="totalBadge">0 pts total</div>
   </div>
 
   <!-- Current Cycle -->
-  <div class="cycle-box">
+  <div class="cycle-card" id="card1">
     <div class="cycle-top">
       <div>
-        <div class="cycle-title">Current Cycle</div>
-        <div class="cycle-meta" id="cycleMeta1"></div>
+        <div class="cycle-label">Current Cycle</div>
+        <div class="cycle-dates" id="dates1">loading…</div>
       </div>
       <div class="cycle-right">
-        <div class="cycle-numbers">
-          <div class="cycle-used" id="cycleUsed1">0 <span>/ 1606</span></div>
-          <div class="cycle-remaining" id="cycleRemaining1"></div>
+        <div>
+          <div class="cycle-pts-val" id="used1">0 <span>/ 1606</span></div>
+          <div class="cycle-pts-rem" id="rem1">1606 remaining</div>
         </div>
-        <button class="btn-edit-cycle" onclick="openModalA()">Edit max</button>
+        <button class="btn-edit" id="editBtn1">Edit max</button>
       </div>
     </div>
-    <div class="progress-track"><div class="progress-fill safe" id="progressFill1" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct1">0%</span><span id="progressMax1">Max: 1606 pts</span></div>
+    <div class="progress-track"><div class="progress-fill" id="fill1" style="width:0%"></div></div>
+    <div class="progress-meta"><span id="pct1">0%</span><span id="maxlbl1">Max: 1606 pts</span></div>
   </div>
 
   <!-- Next Cycle -->
-  <div class="cycle-box2" style="display:block">
+  <div class="cycle-card next" id="card2">
     <div class="cycle-top">
       <div>
-        <div class="cycle-title">Next Cycle</div>
-        <div class="cycle-meta" id="cycleMeta2"></div>
+        <div class="cycle-label">Next Cycle</div>
+        <div class="cycle-dates" id="dates2">loading…</div>
       </div>
       <div class="cycle-right">
-        <div class="cycle-numbers">
-          <div class="cycle-used" id="cycleUsed2">0 <span>/ 1606</span></div>
-          <div class="cycle-remaining" id="cycleRemaining2"></div>
+        <div>
+          <div class="cycle-pts-val" id="used2">0 <span>/ 1606</span></div>
+          <div class="cycle-pts-rem" id="rem2">1606 remaining</div>
         </div>
-        <button class="btn-edit-cycle" onclick="openModalB()">Edit max</button>
+        <button class="btn-edit" id="editBtn2">Edit max</button>
       </div>
     </div>
-    <div class="progress-track"><div class="progress-fill safe" id="progressFill2" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct2">0%</span><span id="progressMax2">Max: 1606 pts</span></div>
+    <div class="progress-track"><div class="progress-fill" id="fill2" style="width:0%"></div></div>
+    <div class="progress-meta"><span id="pct2">0%</span><span id="maxlbl2">Max: 1606 pts</span></div>
   </div>
 
-  <!-- Shared Cycle Edit Modal -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <h3 id="editCycleLabel">Edit Cycle Max Points</h3>
-      <input type="hidden" id="editCycleIdx">
-      <div class="form-group"><label>Max Points</label><input type="number" id="editCycleMax" min="1" step="1" placeholder="e.g. 1606"></div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-save" onclick="saveCycleModal()">Save</button>
+  <!-- Add Shift -->
+  <div class="section-label">Add Shift</div>
+  <div class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="inDate">
+      </div>
+      <div class="form-group">
+        <label>Start (local)</label>
+        <input type="time" id="inStart">
+      </div>
+      <div class="form-group">
+        <label>End (local)</label>
+        <input type="time" id="inEnd">
       </div>
     </div>
+    <button class="btn-add" id="addBtn">+ Add Shift</button>
   </div>
 
-    <!-- Import Schedule -->
-  <div class="import-box">
-    <h2>↓ Import Schedule</h2>
-    <p class="import-desc">
-      Select your schedule PDF — times are extracted automatically and converted from UTC to Spanish local time.
-    </p>
-    <div class="pdf-drop" id="pdfDrop">
-      <div class="pdf-drop-icon">📄</div>
-      <div class="pdf-drop-label">Drop your PDF here or <strong>click to browse</strong></div>
-      <div class="pdf-filename" id="pdfFilename"></div>
+  <!-- Import PDF -->
+  <div class="section-label">Import from PDF</div>
+  <div class="import-card">
+    <div class="pdf-zone" id="pdfZone">
+      Drop schedule PDF here or tap to browse
+      <div class="pdf-name" id="pdfName"></div>
     </div>
-    <input type="file" id="pdfFile" accept=".pdf" style="display:none" onchange="handlePdfFile(this.files[0])">
+    <input type="file" id="pdfFile" accept="application/pdf" style="display:none">
     <div class="import-row">
-      <div class="form-group"><label>Schedule Month &amp; Year</label><input type="month" id="importMonth"></div>
-      <div class="form-group"><label>Import Mode</label>
+      <div class="form-group">
+        <label>Schedule Month</label>
+        <input type="month" id="importMonth">
+      </div>
+      <div class="form-group">
+        <label>Mode</label>
         <select id="importMode">
-          <option value="append">Add to existing shifts</option>
-          <option value="replace">Replace all shifts</option>
+          <option value="append">Append</option>
+          <option value="replace">Replace all</option>
         </select>
       </div>
+      <button class="btn-import" id="btnImport" disabled>Import Shifts</button>
     </div>
-    <div class="import-actions">
-      <button class="btn btn-import" id="btnImport" onclick="importSchedule()" disabled style="opacity:.4;cursor:not-allowed">Import Shifts</button>
-      <button class="btn-clear" onclick="clearImport()">Clear</button>
-    </div>
-    <div class="import-feedback" id="importFeedback"></div>
-    <details style="margin-top:.75rem">
-      <summary style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);cursor:pointer">Show extracted PDF text (for debugging)</summary>
-      <textarea id="debugText" rows="8" style="margin-top:.5rem;font-size:.7rem" placeholder="Extracted text will appear here after loading a PDF…" readonly></textarea>
-    </details>
+    <div class="feedback" id="feedback"></div>
+    <button class="debug-btn" id="debugBtn">▸ Show extracted text</button>
+    <textarea id="debugText" readonly placeholder="Extracted PDF text appears here…"></textarea>
   </div>
 
-  <!-- Manual Add -->
-  <div class="add-shift">
-    <h2>+ Add Shift Manually</h2>
-    <div class="form-row">
-      <div class="form-group"><label>Date</label><input type="date" id="shiftDate"></div>
-      <div></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Start Time (local)</label><input type="time" id="startTime"></div>
-      <div class="form-group"><label>End Time (local)</label><input type="time" id="endTime"></div>
-    </div>
-    <button class="btn btn-primary" onclick="addShift()">Calculate &amp; Add Shift</button>
-  </div>
+  <!-- Shifts -->
+  <div class="section-label">Shifts</div>
+  <div id="shiftsList"></div>
 
-  <!-- Reset bar -->
   <div class="reset-bar">
-    <div class="reset-bar-label">
-      <strong>Manage Data</strong>
-      Clear all shifts or reset everything including cycle settings
-    </div>
-    <div style="display:flex;gap:.6rem;flex-shrink:0">
-      <button class="btn-danger" onclick="confirmClearShifts()">Clear shifts</button>
-      <button class="btn-danger" onclick="confirmResetAll()">Reset all</button>
-    </div>
-  </div>
-
-  <div class="shifts-header">
-    <h2>Your Shifts</h2>
-    <div class="total-badge" id="totalBadge">0 pts total</div>
-  </div>
-  <div class="shifts-list" id="shiftsList">
-    <div class="empty-state"><div class="empty-icon">🗓</div>No shifts added yet.<br>Import your schedule or add one above.</div>
+    <button class="btn-reset" id="clearBtn">Clear shifts</button>
+    <button class="btn-reset" id="resetBtn">Reset all</button>
   </div>
 
 </div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Edit Max Points</h3>
+    <div class="fg">
+      <label>Max Points</label>
+      <input type="number" id="modalMax" min="1" step="1" placeholder="1606">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.getElementById('shiftDate').valueAsDate = new Date();
-  const now = new Date();
-  document.getElementById('importMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+(function () {
+'use strict';
 
-  let shifts = JSON.parse(localStorage.getItem('shifts') || '[]');
-  const ANCHOR = '2026-02-16';
+// ── Constants ──────────────────────────────────────────────────────────────
+var ANCHOR = '2026-02-16';
 
-  // ── Cycle system ──────────────────────────────────────────────────────────
-  // All cycles are 28-day blocks anchored at 2026-02-16.
-  // We always show the cycle TODAY falls in, and the next one.
-  function anchorDate() { return new Date(ANCHOR.replace(/-/g,'/')); }
+// ── State ──────────────────────────────────────────────────────────────────
+var shifts    = JSON.parse(localStorage.getItem('shifts')    || '[]');
+var cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || '{}');
+var pdfText   = '';
+var editingIdx = 0;
 
-  function currentCycleIndex() {
-    const diff = Math.floor((new Date().setHours(0,0,0,0) - anchorDate()) / 86400000);
-    return Math.max(0, Math.floor(diff / 28));
-  }
+// ── Persist ────────────────────────────────────────────────────────────────
+function persist() {
+  localStorage.setItem('shifts',    JSON.stringify(shifts));
+  localStorage.setItem('cycleMeta', JSON.stringify(cycleMeta));
+}
 
-  function cycleStartFor(idx) {
-    const d = anchorDate(); d.setDate(d.getDate() + idx * 28);
-    return d.toISOString().split('T')[0];
-  }
-  function cycleEndFor(idx) {
-    const d = anchorDate(); d.setDate(d.getDate() + idx * 28 + 27);
-    return d.toISOString().split('T')[0];
-  }
-  function inCycleIdx(sh, idx) {
-    return sh.date >= cycleStartFor(idx) && sh.date <= cycleEndFor(idx);
-  }
+// ── Date helpers ───────────────────────────────────────────────────────────
+function parseDate(s) {
+  var p = s.split('-');
+  return new Date(+p[0], +p[1]-1, +p[2]);
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+// polyfill padStart
+if (!String.prototype.padStart) {
+  String.prototype.padStart = function(len, ch) {
+    var s = String(this); ch = ch || ' ';
+    while (s.length < len) s = ch + s; return s;
+  };
+}
 
-  // Per-cycle max points stored by index
-  let cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || 'null');
-  if (!cycleMeta) { cycleMeta = {}; }  // defaults handled in getCycleMax
-  function saveCycleMeta() { localStorage.setItem('cycleMeta', JSON.stringify(cycleMeta)); }
-  function getCycleMax(idx) { return cycleMeta[idx] || 1606; }
-  function setCycleMax(idx, val) { cycleMeta[idx] = val; saveCycleMeta(); }
+function fmtDate(s) {
+  var p = s.split('-');
+  return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+}
+function fmtShort(s) {
+  var p = s.split('-');
+  return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
 
-  // Modals for current (A) and next (B) cycle
-  function openModalA() {
-    const idx = currentCycleIndex();
-    document.getElementById('editCycleLabel').textContent = 'Current Cycle — Max Points';
-    document.getElementById('editCycleMax').value = getCycleMax(idx);
-    document.getElementById('editCycleIdx').value = idx;
-    document.getElementById('modalOverlay').classList.add('open');
-  }
-  function openModalB() {
-    const idx = currentCycleIndex() + 1;
-    document.getElementById('editCycleLabel').textContent = 'Next Cycle — Max Points';
-    document.getElementById('editCycleMax').value = getCycleMax(idx);
-    document.getElementById('editCycleIdx').value = idx;
-    document.getElementById('modalOverlay').classList.add('open');
-  }
-  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
-  function saveCycleModal() {
-    const idx = parseInt(document.getElementById('editCycleIdx').value);
-    const val = parseInt(document.getElementById('editCycleMax').value);
-    cycleMeta[idx] = (val > 0) ? val : 1606;
-    saveCycleMeta(); closeModal(); render();
-  }
-  document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+// ── Cycle helpers ──────────────────────────────────────────────────────────
+function currentCycleIdx() {
+  var anchor = parseDate(ANCHOR);
+  var today  = new Date(); today.setHours(0,0,0,0);
+  var diff   = Math.floor((today.getTime() - anchor.getTime()) / 86400000);
+  return Math.max(0, Math.floor(diff / 28));
+}
+function cycleStart(idx) {
+  var d = parseDate(ANCHOR); d.setDate(d.getDate() + idx * 28); return dateStr(d);
+}
+function cycleEnd(idx) {
+  var d = parseDate(ANCHOR); d.setDate(d.getDate() + idx * 28 + 27); return dateStr(d);
+}
+function inCycle(sh, idx) {
+  return sh.date >= cycleStart(idx) && sh.date <= cycleEnd(idx);
+}
+function getMax(idx) {
+  return cycleMeta[idx] || 1606;
+}
 
-  // ── Override points ───────────────────────────────────────────────────────
-  function effectivePoints(sh) { return sh.manualPoints !== undefined ? sh.manualPoints : sh.totalPoints; }
-  function toggleOverride(id) {
-    const row = document.getElementById('override-row-'+id);
-    if (row) row.style.display = row.style.display==='none' ? 'flex' : 'none';
+// ── Points helpers ─────────────────────────────────────────────────────────
+var BANDS = [
+  {from:0,   to:420,  rate:2.0},
+  {from:420, to:540,  rate:1.5},
+  {from:540, to:1200, rate:1.0},
+  {from:1200,to:1320, rate:1.5},
+  {from:1320,to:1440, rate:2.0}
+];
+function toHHMM(m) {
+  return String(Math.floor(m/60)%24).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+}
+function calcPoints(sMin, eMin) {
+  var segs = [], total = 0;
+  var bands = BANDS.concat(BANDS.map(function(b){
+    return {from:b.from+1440, to:b.to+1440, rate:b.rate};
+  }));
+  for (var i=0; i<bands.length; i++) {
+    var b = bands[i];
+    var oS = Math.max(sMin, b.from), oE = Math.min(eMin, b.to);
+    if (oE <= oS) continue;
+    var mins = oE - oS, pts = (mins/5) * b.rate;
+    segs.push({
+      from: toHHMM(oS % 1440),
+      to:   toHHMM(oE % 1440 === 0 && oE !== oS ? 0 : oE % 1440),
+      minutes: mins, rate: b.rate, points: pts
+    });
+    total += pts;
   }
-  function saveOverride(id) {
-    const val = parseFloat(document.getElementById('override-val-'+id).value);
-    if (isNaN(val)||val<0) { alert('Enter a valid points value.'); return; }
-    const sh = shifts.find(s=>s.id==id); if(!sh) return;
-    sh.manualPoints = val; save(); render();
-  }
-  function clearOverride(id) {
-    const sh = shifts.find(s=>s.id==id); if(!sh) return;
-    delete sh.manualPoints; save(); render();
-  }
+  return {segments: segs, totalPoints: total};
+}
+function eff(sh) {
+  return sh.manualPoints !== undefined ? sh.manualPoints : sh.totalPoints;
+}
+function fmt(n) {
+  return (n % 1 === 0) ? String(n) : n.toFixed(1);
+}
+function dotClass(r) { return r===1.0 ? 'd1' : r===1.5 ? 'd15' : 'd2'; }
 
-  // ── Spain DST ─────────────────────────────────────────────────────────────
-  function lastSunday(year, month) {
-    const last = new Date(year, month, 0); return last.getDate() - last.getDay();
+// ── Spain DST ──────────────────────────────────────────────────────────────
+function lastSun(year, month0) {
+  var d = new Date(year, month0+1, 0); return d.getDate() - d.getDay();
+}
+function spainOffset(ds) {
+  var p = ds.split('-'), y=+p[0], m=+p[1]-1, d=+p[2];
+  var date   = new Date(y,m,d);
+  var dstOn  = new Date(y,2, lastSun(y,2));
+  var dstOff = new Date(y,9, lastSun(y,9));
+  return (date >= dstOn && date < dstOff) ? 120 : 60;
+}
+function utcToSpain(ds, hhmm) {
+  var h = +hhmm.slice(0,2), m = +hhmm.slice(2,4);
+  var total = h*60 + m + spainOffset(ds);
+  if (total >= 1440) {
+    total -= 1440;
+    var p = ds.split('-');
+    ds = dateStr(new Date(+p[0], +p[1]-1, +p[2]+1));
   }
-  function spainOffset(dateStr) {
-    const [y,m,d] = dateStr.split('-').map(Number);
-    const date   = new Date(y,m-1,d);
-    const dstOn  = new Date(y,2,lastSunday(y,3));
-    const dstOff = new Date(y,9,lastSunday(y,10));
-    return (date>=dstOn && date<dstOff) ? 120 : 60;
+  return { date: ds, time: toHHMM(total) };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  var cidx = currentCycleIdx(), nidx = cidx + 1;
+  var tot1 = 0, tot2 = 0, grand = 0;
+  for (var i=0; i<shifts.length; i++) {
+    var p = eff(shifts[i]); grand += p;
+    if (inCycle(shifts[i], cidx)) tot1 += p;
+    if (inCycle(shifts[i], nidx)) tot2 += p;
   }
-  function utcToSpain(dateStr, hhmm) {
-    const h=parseInt(hhmm.slice(0,2)), m=parseInt(hhmm.slice(2,4));
-    let total = h*60+m+spainOffset(dateStr);
-    let [y,mo,d] = dateStr.split('-').map(Number);
-    if (total>=1440) {
-      total-=1440;
-      const next=new Date(y,mo-1,d+1); dateStr=next.toISOString().split('T')[0];
+  document.getElementById('totalBadge').textContent = fmt(grand) + ' pts total';
+  renderCard('1', cidx, tot1);
+  renderCard('2', nidx, tot2);
+  renderShifts();
+}
+
+function renderCard(n, idx, total) {
+  var max = getMax(idx);
+  var pct = Math.min(100, (total / max) * 100);
+  document.getElementById('dates'+n).textContent = fmtShort(cycleStart(idx)) + ' – ' + fmtShort(cycleEnd(idx));
+  document.getElementById('used'+n).innerHTML = fmt(total) + ' <span>/ ' + max + '</span>';
+  var rem = max - total;
+  var remEl = document.getElementById('rem'+n);
+  if (rem < 0) { remEl.textContent = fmt(-rem) + ' over limit!'; remEl.className = 'cycle-pts-rem over'; }
+  else         { remEl.textContent = fmt(rem)  + ' remaining';   remEl.className = 'cycle-pts-rem'; }
+  document.getElementById('pct'+n).textContent    = pct.toFixed(1) + '%';
+  document.getElementById('maxlbl'+n).textContent = 'Max: ' + max + ' pts';
+  var fill = document.getElementById('fill'+n);
+  fill.style.width = pct + '%';
+  fill.className = 'progress-fill' + (pct >= 100 ? ' danger' : pct >= 80 ? ' warn' : '');
+}
+
+function renderShifts() {
+  var list = document.getElementById('shiftsList');
+  if (!shifts.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🗓</div>No shifts yet.<br>Import your schedule or add one manually.</div>';
+    var old = document.getElementById('gtEl');
+    if (old) old.parentNode.removeChild(old);
+    return;
+  }
+  var html = '';
+  for (var i=0; i<shifts.length; i++) {
+    var sh   = shifts[i];
+    var pts  = eff(sh);
+    var ovb  = sh.manualPoints !== undefined ? '<span class="ov-badge">✎</span>' : '';
+    var rows = '';
+    for (var j=0; j<sh.segments.length; j++) {
+      var sg = sh.segments[j];
+      rows += '<tr><td>' + sg.from + ' – ' + sg.to + '</td><td>' + sg.minutes + 'm</td>' +
+              '<td><span class="rdot ' + dotClass(sg.rate) + '"></span>' + sg.rate + '×</td>' +
+              '<td>' + fmt(sg.points) + '</td></tr>';
     }
-    return { dateStr, time: String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0') };
+    var ovv = sh.manualPoints !== undefined ? sh.manualPoints : fmt(sh.totalPoints);
+    html +=
+      '<div class="shift-card" data-id="' + sh.id + '">' +
+        '<div class="shift-head" data-toggle="' + sh.id + '">' +
+          '<div><div class="shift-date">' + fmtDate(sh.date) + '</div>' +
+          '<div class="shift-time">' + sh.startTime + ' – ' + sh.endTime + '</div></div>' +
+          '<div class="shift-right">' +
+            '<div class="shift-pts">' + fmt(pts) + ' pts' + ovb + '</div>' +
+            '<button class="btn-ov" data-ov="' + sh.id + '">✎</button>' +
+            '<span class="chevron">▼</span>' +
+            '<button class="btn-del" data-del="' + sh.id + '">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="shift-body">' +
+          '<table class="breakdown-table">' +
+            '<thead><tr><th>Period</th><th>Duration</th><th>Rate</th><th>Points</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+        '</div>' +
+        '<div class="ov-row" id="ov-' + sh.id + '">' +
+          '<label>Override pts:</label>' +
+          '<input type="number" id="ov-val-' + sh.id + '" min="0" step="0.5" value="' + ovv + '">' +
+          '<button class="btn-ov-save" data-ov-save="' + sh.id + '">Save</button>' +
+          '<button class="btn-ov-reset" data-ov-reset="' + sh.id + '">Reset</button>' +
+        '</div>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+
+  // Grand total
+  var gt = document.getElementById('gtEl');
+  if (!gt) {
+    gt = document.createElement('div');
+    gt.id = 'gtEl'; gt.className = 'grand-total';
+    list.parentNode.insertBefore(gt, list.nextSibling);
+  }
+  var totalMins = 0, grand = 0;
+  for (var k=0; k<shifts.length; k++) {
+    var sv = shifts[k].startTime.split(':'), ev = shifts[k].endTime.split(':');
+    var sm = +sv[0]*60 + +sv[1], em = +ev[0]*60 + +ev[1];
+    if (em <= sm) em += 1440;
+    totalMins += (em - sm);
+    grand += eff(shifts[k]);
+  }
+  gt.innerHTML =
+    '<div><div class="gt-label">Grand Total</div>' +
+    '<div class="gt-sub">' + shifts.length + ' shift' + (shifts.length!==1?'s':'') +
+    ' · ' + Math.floor(totalMins/60) + 'h ' + (totalMins%60) + 'm</div></div>' +
+    '<div><div class="gt-val">' + fmt(grand) + '</div>' +
+    '<div class="gt-sub" style="text-align:right">points</div></div>';
+}
+
+// ── Event delegation ────────────────────────────────────────────────────────
+document.getElementById('shiftsList').addEventListener('click', function(e) {
+  var t = e.target;
+
+  // Toggle card
+  var toggle = t.closest ? t.closest('[data-toggle]') : null;
+  if (toggle && !t.dataset.del && !t.dataset.ov && !t.dataset.ovSave && !t.dataset.ovReset) {
+    var id = toggle.dataset.toggle;
+    var card = document.querySelector('.shift-card[data-id="' + id + '"]');
+    if (card) card.classList.toggle('open');
+    return;
   }
 
-  // ── PDF handling ──────────────────────────────────────────────────────────
-  let extractedPdfText = '';
-  (function() {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; };
-    document.head.appendChild(s);
-  })();
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const zone  = document.getElementById('pdfDrop');
-    const input = document.getElementById('pdfFile');
-    zone.addEventListener('click', () => input.click());
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-    zone.addEventListener('dragleave', e => { if(!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('drag');
-      const f=e.dataTransfer.files[0];
-      if(f&&f.type==='application/pdf') handlePdfFile(f);
-      else feedback('err','Please drop a PDF file.');
-    });
-  });
-
-  async function handlePdfFile(file) {
-    if (!file) return;
-    feedback('ok','⏳ Reading PDF…');
-    document.getElementById('pdfFilename').textContent='📎 '+file.name;
-    document.getElementById('pdfFilename').style.display='block';
-    try {
-      const buf=await file.arrayBuffer();
-      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-      let fullText='';
-      for (let p=1;p<=pdf.numPages;p++) {
-        const page=await pdf.getPage(p), content=await page.getTextContent();
-        const items=content.items.filter(i=>i.str.trim());
-        const lines=[];
-        for (const item of items) {
-          const y=Math.round(item.transform[5]);
-          const row=lines.find(l=>Math.abs(l.y-y)<4);
-          if(row) row.parts.push({x:item.transform[4],text:item.str});
-          else    lines.push({y,parts:[{x:item.transform[4],text:item.str}]});
-        }
-        lines.sort((a,b)=>b.y-a.y);
-        for (const line of lines) {
-          line.parts.sort((a,b)=>a.x-b.x);
-          let str='',lastX=null;
-          for (const part of line.parts) {
-            if(lastX!==null) str+=' '.repeat(Math.max(1,Math.round((part.x-lastX)/6)));
-            str+=part.text; lastX=part.x+part.text.length*6;
-          }
-          fullText+=str.trimEnd()+'\n';
-        }
-        fullText+='\n';
-      }
-      extractedPdfText=fullText;
-      document.getElementById('debugText').value=fullText;
-      const btn=document.getElementById('btnImport');
-      btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
-      feedback('ok','✓ PDF loaded ('+pdf.numPages+' page). Set month and click Import Shifts.');
-    } catch(e) { feedback('err','⚠ Could not read PDF: '+e.message); }
+  // Delete
+  if (t.dataset.del) {
+    var id = t.dataset.del;
+    shifts = shifts.filter(function(s){ return String(s.id) !== String(id); });
+    persist(); render(); return;
   }
 
-  // ── Schedule parser ───────────────────────────────────────────────────────
-  function parseSchedule(text, yearMonth) {
-    const [year, month] = yearMonth.split('-').map(Number);
-    const DAY_RE  = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\d{1,2}$/i;
-    const TIME_RE = /^\d{4}$/;
-    const isFlightLabel = t => /^f[l1]/i.test(t);
-    const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length);
-    let headerIdx=-1, bestCount=0;
-    lines.forEach((l,i)=>{
-      const n=l.split(/\s+/).filter(t=>DAY_RE.test(t)).length;
-      if(n>bestCount){bestCount=n;headerIdx=i;}
-    });
-    if(headerIdx<0||bestCount<3) throw new Error('Could not find day header row.');
-    const headerToks = lines[headerIdx].split(/\s+/).filter(t=>DAY_RE.test(t));
-    const labelToks  = (lines[headerIdx+1]||'').split(/\s+/).filter(t=>t.length);
-    let startToks    = (lines[headerIdx+2]||'').split(/\s+/).filter(t=>t.length);
-    let endToks      = (lines[headerIdx+3]||'').split(/\s+/).filter(t=>t.length);
-    if(headerToks.length!==labelToks.length)
-      throw new Error('Header ('+headerToks.length+' days) and label row ('+labelToks.length+') don\'t match.');
-    labelToks.forEach((lbl,i)=>{ if(lbl.toUpperCase()==='X'){startToks.splice(i,0,null);endToks.splice(i,0,null);} });
-    const parsed=[],errors=[];
-    headerToks.forEach((htok,i)=>{
-      const dayNum=parseInt(htok.replace(/\D/g,''));
-      const lbl=labelToks[i]||'';
-      if(!isFlightLabel(lbl)) return;
-      const s=startToks[i],e=endToks[i];
-      if(!s||!e||!TIME_RE.test(s)||!TIME_RE.test(e)){errors.push('Day '+dayNum+': missing times');return;}
-      const dateStr=year+'-'+String(month).padStart(2,'0')+'-'+String(dayNum).padStart(2,'0');
-      const sv=utcToSpain(dateStr,s),ev=utcToSpain(dateStr,e);
-      parsed.push({date:sv.dateStr,startTime:sv.time,endTime:ev.time});
-    });
-    const seen=new Set();
-    return {parsed:parsed.filter(p=>{const k=p.date+'_'+p.startTime;if(seen.has(k))return false;seen.add(k);return true;}),errors};
+  // Toggle override row
+  if (t.dataset.ov && !t.dataset.ovSave && !t.dataset.ovReset) {
+    var row = document.getElementById('ov-' + t.dataset.ov);
+    if (row) row.style.display = row.style.display === 'flex' ? 'none' : 'flex';
+    return;
   }
 
-  function importSchedule() {
-    const text=extractedPdfText, ym=document.getElementById('importMonth').value, mode=document.getElementById('importMode').value;
-    if(!text.trim()){feedback('err','Please select a PDF first.');return;}
-    if(!ym){feedback('err','Please select the schedule month and year.');return;}
-    let parsed,errors;
-    try{({parsed,errors}=parseSchedule(text,ym));}catch(e){feedback('err','⚠ '+e.message);return;}
-    if(!parsed.length){feedback('err','No shifts found. '+(errors.length?errors.join('; '):'Check format.'));return;}
-    const newShifts=parsed.map(p=>{
-      const [sh,sm]=p.startTime.split(':').map(Number);let[eh,em]=p.endTime.split(':').map(Number);
-      let sMin=sh*60+sm,eMin=eh*60+em; if(eMin<=sMin)eMin+=1440;
-      const{segments,totalPoints}=calcPoints(sMin,eMin);
-      return{id:Date.now()+Math.random(),date:p.date,startTime:p.startTime,endTime:p.endTime,segments,totalPoints};
-    });
-    let skipped=0;
-    if(mode==='replace'){shifts=newShifts;}
-    else{const ex=new Set(shifts.map(s=>s.date+'_'+s.startTime));const toAdd=newShifts.filter(s=>!ex.has(s.date+'_'+s.startTime));skipped=newShifts.length-toAdd.length;shifts=[...shifts,...toAdd];}
-    shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
-    save();render();
-    let msg='✓ Imported '+parsed.length+' shift'+(parsed.length!==1?'s':'')+'.';
-    if(skipped) msg+='  '+skipped+' duplicate(s) skipped.';
-    if(errors.length) msg+='  ⚠ '+errors.join('; ');
-    feedback('ok',msg);
+  // Save override
+  if (t.dataset.ovSave) {
+    var id  = t.dataset.ovSave;
+    var val = parseFloat(document.getElementById('ov-val-'+id).value);
+    if (isNaN(val) || val < 0) { alert('Enter a valid number.'); return; }
+    var sh = null;
+    for (var i=0; i<shifts.length; i++) { if (String(shifts[i].id)===String(id)) { sh=shifts[i]; break; } }
+    if (sh) { sh.manualPoints = val; persist(); render(); }
+    return;
   }
 
-  function feedback(type,msg){const el=document.getElementById('importFeedback');el.className='import-feedback '+type;el.textContent=msg;}
-  function clearImport(){
-    extractedPdfText='';document.getElementById('pdfFile').value='';
-    document.getElementById('pdfFilename').style.display='none';document.getElementById('pdfFilename').textContent='';
-    const btn=document.getElementById('btnImport');btn.disabled=true;btn.style.opacity='.4';btn.style.cursor='not-allowed';
-    const el=document.getElementById('importFeedback');el.className='import-feedback';el.textContent='';
-  }
-
-  // ── Points calculation ────────────────────────────────────────────────────
-  const BOUNDARIES=[{from:0,to:420,rate:2.0},{from:420,to:540,rate:1.5},{from:540,to:1200,rate:1.0},{from:1200,to:1320,rate:1.5},{from:1320,to:1440,rate:2.0}];
-  function toHHMM(m){const h=Math.floor(m/60)%24,mn=m%60;return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0');}
-  function calcPoints(sMin,eMin){
-    let segs=[],total=0;
-    const ext=[...BOUNDARIES,...BOUNDARIES.map(b=>({from:b.from+1440,to:b.to+1440,rate:b.rate}))];
-    for(const seg of ext){const oS=Math.max(sMin,seg.from),oE=Math.min(eMin,seg.to);if(oE<=oS)continue;const mins=oE-oS,pts=(mins/5)*seg.rate;segs.push({from:toHHMM(oS%1440),to:toHHMM(oE%1440===0&&oE!==oS?0:oE%1440),minutes:mins,rate:seg.rate,points:pts});total+=pts;}
-    return{segments:segs,totalPoints:total};
-  }
-
-  function addShift(){
-    const d=document.getElementById('shiftDate').value,s=document.getElementById('startTime').value,e=document.getElementById('endTime').value;
-    if(!d||!s||!e){alert('Please fill in all fields.');return;}
-    const[sh,sm]=s.split(':').map(Number);let[eh,em]=e.split(':').map(Number);
-    let sMin=sh*60+sm,eMin=eh*60+em;if(eMin<=sMin)eMin+=1440;
-    const{segments,totalPoints}=calcPoints(sMin,eMin);
-    shifts.push({id:Date.now(),date:d,startTime:s,endTime:e,segments,totalPoints});
-    shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
-    save();render();
-  }
-
-  function deleteShift(id){shifts=shifts.filter(s=>s.id!==id);save();render();}
-  function toggleCard(id){document.querySelector('.shift-card[data-id="'+id+'"]')?.classList.toggle('open');}
-  function save(){localStorage.setItem('shifts',JSON.stringify(shifts));}
-  function fmt(n){return n%1===0?n:n.toFixed(1);}
-  function fmtDate(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
-  function fmtShort(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
-  function dotClass(r){return r===1.0?'dot-1':r===1.5?'dot-15':'dot-2';}
-
-  // ── Render cycle cards ────────────────────────────────────────────────────
-  function renderCycleCard(ids, total, idx) {
-    const start=cycleStartFor(idx), end=cycleEndFor(idx), max=getCycleMax(idx);
-    document.getElementById(ids.meta).textContent=fmtShort(start)+' – '+fmtShort(end);
-    document.getElementById(ids.used).innerHTML=fmt(total)+' <span>/ '+max+'</span>';
-    const pct=Math.min(100,(total/max)*100);
-    document.getElementById(ids.remaining).textContent=total>max?fmt(total-max)+' over limit!':fmt(max-total)+' remaining';
-    document.getElementById(ids.pct).textContent=pct.toFixed(1)+'%';
-    document.getElementById(ids.maxlbl).textContent='Max: '+max+' pts';
-    const fill=document.getElementById(ids.fill);
-    fill.style.width=pct+'%';
-    fill.className='progress-fill '+(pct>=100?'danger':pct>=80?'warn':'safe');
-  }
-
-  function cycleStartFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28);return d.toISOString().split('T')[0];}
-  function cycleEndFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28+27);return d.toISOString().split('T')[0];}
-
-  // ── Confirm clear ─────────────────────────────────────────────────────────
-  function confirmClearShifts(){
-    if(!shifts.length){alert('No shifts to clear.');return;}
-    if(confirm('Delete all '+shifts.length+' shift'+(shifts.length!==1?'s':'')+' ? Cannot be undone.')){shifts=[];save();render();}
-  }
-  function confirmResetAll(){
-    if(confirm('Reset everything? Deletes all shifts and cycle max settings.')){
-      shifts=[];cycleMeta={};localStorage.removeItem('shifts');localStorage.removeItem('cycleMeta');render();
+  // Reset override
+  if (t.dataset.ovReset) {
+    var id = t.dataset.ovReset;
+    for (var i=0; i<shifts.length; i++) {
+      if (String(shifts[i].id)===String(id)) { delete shifts[i].manualPoints; break; }
     }
+    persist(); render(); return;
   }
+});
 
-  // ── Main render ───────────────────────────────────────────────────────────
-  function render(){
-    const cidx=currentCycleIndex(), nidx=cidx+1;
-    const total1=shifts.reduce((s,sh)=>inCycleIdx(sh,cidx)?s+effectivePoints(sh):s,0);
-    const total2=shifts.reduce((s,sh)=>inCycleIdx(sh,nidx)?s+effectivePoints(sh):s,0);
-    const grand =shifts.reduce((s,sh)=>s+effectivePoints(sh),0);
+// ── Add shift ──────────────────────────────────────────────────────────────
+document.getElementById('addBtn').addEventListener('click', function() {
+  var d = document.getElementById('inDate').value;
+  var s = document.getElementById('inStart').value;
+  var e = document.getElementById('inEnd').value;
+  if (!d || !s || !e) { alert('Please fill in all fields.'); return; }
+  var sv = s.split(':'), ev = e.split(':');
+  var sMin = +sv[0]*60 + +sv[1], eMin = +ev[0]*60 + +ev[1];
+  if (eMin <= sMin) eMin += 1440;
+  var cp = calcPoints(sMin, eMin);
+  shifts.push({id: Date.now(), date:d, startTime:s, endTime:e, segments:cp.segments, totalPoints:cp.totalPoints});
+  shifts.sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : a.startTime < b.startTime ? -1 : 1; });
+  persist(); render();
+});
 
-    document.getElementById('cycleTitle1').textContent='Current Cycle';
-    document.getElementById('cycleTitle2').textContent='Next Cycle';
-    renderCycleCard({meta:'cycleMeta1',used:'cycleUsed1',remaining:'cycleRemaining1',pct:'progressPct1',maxlbl:'progressMax1',fill:'progressFill1'},total1,cidx);
-    renderCycleCard({meta:'cycleMeta2',used:'cycleUsed2',remaining:'cycleRemaining2',pct:'progressPct2',maxlbl:'progressMax2',fill:'progressFill2'},total2,nidx);
-
-    const badge=document.getElementById('totalBadge');
-    badge.textContent=fmt(grand)+' pts total';
-
-    const list=document.getElementById('shiftsList');
-    if(!shifts.length){
-      list.innerHTML='<div class="empty-state"><div class="empty-icon">🗓</div>No shifts yet.<br>Import your schedule or add one above.</div>';
-      const gt=document.getElementById('grandTotal');if(gt)gt.remove();return;
-    }
-
-    list.innerHTML=shifts.map(sh=>`
-      <div class="shift-card" data-id="${sh.id}">
-        <div class="shift-card-header" onclick="toggleCard(${sh.id})">
-          <div><div class="shift-date">${fmtDate(sh.date)}</div><div class="shift-time">${sh.startTime} – ${sh.endTime}</div></div>
-          <div class="shift-right">
-            <div class="shift-total">${fmt(effectivePoints(sh))} pts${sh.manualPoints!==undefined?'<span class="override-badge" title="Manually overridden">✎</span>':''}</div>
-            <button class="override-btn" onclick="event.stopPropagation();toggleOverride(${sh.id})" title="Override points">✎</button>
-            <span class="chevron">▼</span>
-            <button class="btn-delete" onclick="event.stopPropagation();deleteShift(${sh.id})">✕</button>
-          </div>
-        </div>
-        <div class="shift-breakdown">
-          <table class="breakdown-table">
-            <thead><tr><th>Period</th><th>Duration</th><th>Rate</th><th>Points</th></tr></thead>
-            <tbody>${sh.segments.map(seg=>`<tr><td>${seg.from} – ${seg.to}</td><td>${seg.minutes}m</td><td><span class="rate-dot ${dotClass(seg.rate)}"></span>${seg.rate}×</td><td>${fmt(seg.points)}</td></tr>`).join('')}</tbody>
-          </table>
-        </div>
-        <div class="override-input-row" id="override-row-${sh.id}" style="display:none">
-          <label>Override pts:</label>
-          <input type="number" id="override-val-${sh.id}" min="0" step="0.5" value="${sh.manualPoints!==undefined?sh.manualPoints:fmt(sh.totalPoints)}" onclick="event.stopPropagation()">
-          <button class="btn-override-save" onclick="event.stopPropagation();saveOverride(${sh.id})">Save</button>
-          <button class="btn-override-clear" onclick="event.stopPropagation();clearOverride(${sh.id})">Reset</button>
-        </div>
-      </div>`).join('');
-
-    let gt=document.getElementById('grandTotal');
-    if(!gt){gt=document.createElement('div');gt.id='grandTotal';gt.className='grand-total';list.parentNode.appendChild(gt);}
-    const tm=shifts.reduce((s,sh)=>{const[sh2,sm2]=sh.startTime.split(':').map(Number);let[eh,em]=sh.endTime.split(':').map(Number);let st=sh2*60+sm2,en=eh*60+em;if(en<=st)en+=1440;return s+(en-st);},0);
-    gt.innerHTML=`<div><div class="grand-total-label">Grand Total</div><div class="grand-total-sub">${shifts.length} shift${shifts.length!==1?'s':''} · ${Math.floor(tm/60)}h ${tm%60}m</div></div><div><div class="grand-total-val">${fmt(grand)}</div><div class="grand-total-sub" style="text-align:right">points</div></div>`;
-  }
-
+// ── Edit cycle modal ────────────────────────────────────────────────────────
+document.getElementById('editBtn1').addEventListener('click', function() {
+  editingIdx = currentCycleIdx();
+  document.getElementById('modalTitle').textContent = 'Current Cycle — Max Points';
+  document.getElementById('modalMax').value = getMax(editingIdx);
+  document.getElementById('overlay').classList.add('open');
+});
+document.getElementById('editBtn2').addEventListener('click', function() {
+  editingIdx = currentCycleIdx() + 1;
+  document.getElementById('modalTitle').textContent = 'Next Cycle — Max Points';
+  document.getElementById('modalMax').value = getMax(editingIdx);
+  document.getElementById('overlay').classList.add('open');
+});
+document.getElementById('cancelBtn').addEventListener('click', function() {
+  document.getElementById('overlay').classList.remove('open');
+});
+document.getElementById('saveBtn').addEventListener('click', function() {
+  var val = parseInt(document.getElementById('modalMax').value);
+  cycleMeta[editingIdx] = (val > 0) ? val : 1606;
+  persist();
+  document.getElementById('overlay').classList.remove('open');
   render();
+});
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) document.getElementById('overlay').classList.remove('open');
+});
+
+// ── Clear / Reset ────────────────────────────────────────────────────────────
+document.getElementById('clearBtn').addEventListener('click', function() {
+  if (!shifts.length) { alert('No shifts to clear.'); return; }
+  if (confirm('Delete all ' + shifts.length + ' shift(s)?')) { shifts = []; persist(); render(); }
+});
+document.getElementById('resetBtn').addEventListener('click', function() {
+  if (confirm('Reset everything? Shifts and cycle settings will be deleted.')) {
+    shifts = []; cycleMeta = {};
+    localStorage.removeItem('shifts'); localStorage.removeItem('cycleMeta');
+    render();
+  }
+});
+
+// ── Debug toggle ─────────────────────────────────────────────────────────────
+document.getElementById('debugBtn').addEventListener('click', function() {
+  var el  = document.getElementById('debugText');
+  var open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  this.textContent = (open ? '▸' : '▾') + ' Show extracted text';
+});
+
+// ── PDF load ─────────────────────────────────────────────────────────────────
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = function() {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  };
+  document.head.appendChild(s);
+})();
+
+var zone = document.getElementById('pdfZone');
+var finput = document.getElementById('pdfFile');
+
+zone.addEventListener('click', function() { finput.click(); });
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', function(e) { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
+zone.addEventListener('drop', function(e) {
+  e.preventDefault(); zone.classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') readPdf(f);
+  else setFeedback('err', 'Please drop a PDF file.');
+});
+finput.addEventListener('change', function() {
+  if (finput.files[0]) readPdf(finput.files[0]);
+});
+
+function readPdf(file) {
+  setFeedback('ok', '⏳ Reading PDF…');
+  var nameEl = document.getElementById('pdfName');
+  nameEl.textContent = '📎 ' + file.name; nameEl.style.display = 'block';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var buf = e.target.result;
+    pdfjsLib.getDocument({data: buf}).promise.then(function(pdf) {
+      var pages = [], pageNums = [];
+      for (var p=1; p<=pdf.numPages; p++) pageNums.push(p);
+      var done = 0, full = '';
+      var pageTexts = new Array(pdf.numPages);
+      pageNums.forEach(function(p) {
+        pdf.getPage(p).then(function(page) {
+          page.getTextContent().then(function(content) {
+            var items = content.items.filter(function(i){ return i.str.trim(); });
+            var lines = [];
+            for (var i=0; i<items.length; i++) {
+              var item = items[i], y = Math.round(item.transform[5]), row = null;
+              for (var j=0; j<lines.length; j++) { if (Math.abs(lines[j].y - y) < 4) { row = lines[j]; break; } }
+              if (row) row.parts.push({x: item.transform[4], text: item.str});
+              else     lines.push({y: y, parts: [{x: item.transform[4], text: item.str}]});
+            }
+            lines.sort(function(a,b){ return b.y - a.y; });
+            var t = '';
+            for (var k=0; k<lines.length; k++) {
+              var ln = lines[k];
+              ln.parts.sort(function(a,b){ return a.x - b.x; });
+              var str = '', lastX = null;
+              for (var q=0; q<ln.parts.length; q++) {
+                var pt = ln.parts[q];
+                if (lastX !== null) {
+                  var spaces = Math.max(1, Math.round((pt.x - lastX) / 6));
+                  for (var sp=0; sp<spaces; sp++) str += ' ';
+                }
+                str += pt.text; lastX = pt.x + pt.text.length * 6;
+              }
+              t += str.replace(/\s+$/, '') + '\n';
+            }
+            pageTexts[p-1] = t;
+            done++;
+            if (done === pdf.numPages) {
+              pdfText = pageTexts.join('\n');
+              document.getElementById('debugText').value = pdfText;
+              document.getElementById('btnImport').disabled = false;
+              setFeedback('ok', '✓ PDF loaded (' + pdf.numPages + ' page). Set month and click Import Shifts.');
+            }
+          });
+        });
+      });
+    }).catch(function(err) {
+      setFeedback('err', '⚠ Could not read PDF: ' + err.message);
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function setFeedback(type, msg) {
+  var el = document.getElementById('feedback');
+  el.className = 'feedback ' + type;
+  el.textContent = msg;
+}
+
+// ── Schedule parser ───────────────────────────────────────────────────────────
+function parseSchedule(text, ym) {
+  var parts = ym.split('-'), year = +parts[0], month = +parts[1];
+  var DAY_RE   = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\d{1,2}$/i;
+  var TIME_RE  = /^\d{4}$/;
+  var isFlight = function(t) { return /^f[l1]/i.test(t); };
+
+  var lines = [];
+  var raw = text.split('\n');
+  for (var i=0; i<raw.length; i++) {
+    var l = raw[i].replace(/^\s+|\s+$/g,'');
+    if (l) lines.push(l);
+  }
+
+  // Find header line
+  var headerIdx = -1, best = 0;
+  for (var i=0; i<lines.length; i++) {
+    var toks = lines[i].split(/\s+/);
+    var n = 0;
+    for (var j=0; j<toks.length; j++) { if (DAY_RE.test(toks[j])) n++; }
+    if (n > best) { best = n; headerIdx = i; }
+  }
+  if (headerIdx < 0 || best < 3) throw new Error('Could not find day header row.');
+
+  function splitLine(l) {
+    var toks = l.split(/\s+/), out = [];
+    for (var i=0; i<toks.length; i++) { if (toks[i]) out.push(toks[i]); }
+    return out;
+  }
+
+  var headerToks = splitLine(lines[headerIdx]).filter(function(t){ return DAY_RE.test(t); });
+  var labelToks  = splitLine(lines[headerIdx+1] || '');
+  var startToks  = splitLine(lines[headerIdx+2] || '');
+  var endToks    = splitLine(lines[headerIdx+3] || '');
+
+  if (headerToks.length !== labelToks.length)
+    throw new Error('Header (' + headerToks.length + ' days) and labels (' + labelToks.length + ') don\'t match.');
+
+  // Insert null at X positions in time arrays
+  for (var x=0; x<labelToks.length; x++) {
+    if (labelToks[x].toUpperCase() === 'X') {
+      startToks.splice(x, 0, null);
+      endToks.splice(x, 0, null);
+    }
+  }
+
+  var parsed = [], errors = [];
+  for (var j=0; j<headerToks.length; j++) {
+    var dayNum = parseInt(headerToks[j].replace(/\D/g,''));
+    var lbl = labelToks[j] || '';
+    if (!isFlight(lbl)) continue;
+    var s = startToks[j], e = endToks[j];
+    if (!s || !e || !TIME_RE.test(s) || !TIME_RE.test(e)) {
+      errors.push('Day ' + dayNum + ': missing times'); continue;
+    }
+    var ds = year + '-' + String(month).padStart(2,'0') + '-' + String(dayNum).padStart(2,'0');
+    var sv = utcToSpain(ds, s), ev = utcToSpain(ds, e);
+    parsed.push({date: sv.date, startTime: sv.time, endTime: ev.time});
+  }
+
+  // Deduplicate
+  var seen = {}, out = [];
+  for (var k=0; k<parsed.length; k++) {
+    var key = parsed[k].date + '_' + parsed[k].startTime;
+    if (!seen[key]) { seen[key] = true; out.push(parsed[k]); }
+  }
+  return {parsed: out, errors: errors};
+}
+
+document.getElementById('btnImport').addEventListener('click', function() {
+  var ym   = document.getElementById('importMonth').value;
+  var mode = document.getElementById('importMode').value;
+  if (!pdfText.trim()) { setFeedback('err', 'Please select a PDF first.'); return; }
+  if (!ym)             { setFeedback('err', 'Please select the schedule month.'); return; }
+
+  var result;
+  try { result = parseSchedule(pdfText, ym); }
+  catch(e) { setFeedback('err', '⚠ ' + e.message); return; }
+
+  var parsed = result.parsed, errors = result.errors;
+  if (!parsed.length) {
+    setFeedback('err', 'No flight shifts found. ' + (errors.length ? errors.join('; ') : 'Check PDF format.'));
+    return;
+  }
+
+  var newShifts = [];
+  for (var i=0; i<parsed.length; i++) {
+    var p  = parsed[i];
+    var sv = p.startTime.split(':'), ev = p.endTime.split(':');
+    var sMin = +sv[0]*60 + +sv[1], eMin = +ev[0]*60 + +ev[1];
+    if (eMin <= sMin) eMin += 1440;
+    var cp = calcPoints(sMin, eMin);
+    newShifts.push({id: Date.now()+Math.random(), date:p.date, startTime:p.startTime, endTime:p.endTime, segments:cp.segments, totalPoints:cp.totalPoints});
+  }
+
+  var skipped = 0;
+  if (mode === 'replace') {
+    shifts = newShifts;
+  } else {
+    var ex = {};
+    for (var i=0; i<shifts.length; i++) ex[shifts[i].date+'_'+shifts[i].startTime] = true;
+    var toAdd = [];
+    for (var i=0; i<newShifts.length; i++) {
+      if (!ex[newShifts[i].date+'_'+newShifts[i].startTime]) toAdd.push(newShifts[i]);
+      else skipped++;
+    }
+    shifts = shifts.concat(toAdd);
+  }
+  shifts.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:a.startTime<b.startTime?-1:1; });
+  persist(); render();
+
+  var msg = '✓ Imported ' + parsed.length + ' shift' + (parsed.length!==1?'s':'') + '.';
+  if (skipped) msg += '  ' + skipped + ' duplicate(s) skipped.';
+  if (errors.length) msg += '  ⚠ ' + errors.join('; ');
+  setFeedback('ok', msg);
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.getElementById('inDate').valueAsDate = new Date();
+(function() {
+  var now = new Date();
+  document.getElementById('importMonth').value =
+    now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+})();
+
+render();
+
+})(); // end IIFE
 </script>
 </body>
 </html>
