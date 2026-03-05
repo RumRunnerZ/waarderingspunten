@@ -183,52 +183,58 @@
     <div class="progress-labels"><span id="progressPct">0%</span><span id="progressMax">Max: 1606 pts</span></div>
   </div>
 
-  <!-- Second Cycle Card (shown when shifts span into next cycle) -->
-  <div class="cycle-box2" id="cycleBox2">
+  <!-- Current Cycle -->
+  <div class="cycle-box">
     <div class="cycle-top">
       <div>
-        <div class="cycle-title">Next Cycle</div>
+        <div class="cycle-title" id="cycleTitle1">Current Cycle</div>
+        <div class="cycle-meta" id="cycleMeta1"></div>
+      </div>
+      <div class="cycle-right">
+        <div class="cycle-numbers">
+          <div class="cycle-used" id="cycleUsed1">0 <span>/ —</span></div>
+          <div class="cycle-remaining" id="cycleRemaining1"></div>
+        </div>
+        <button class="btn-edit-cycle" onclick="openModalA()">Edit max</button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill safe" id="progressFill1" style="width:0%"></div></div>
+    <div class="progress-labels"><span id="progressPct1">—</span><span id="progressMax1"></span></div>
+  </div>
+
+  <!-- Next Cycle -->
+  <div class="cycle-box2" id="cycleBox2" style="display:block">
+    <div class="cycle-top">
+      <div>
+        <div class="cycle-title" id="cycleTitle2">Next Cycle</div>
         <div class="cycle-meta" id="cycleMeta2"></div>
       </div>
       <div class="cycle-right">
         <div class="cycle-numbers">
           <div class="cycle-used" id="cycleUsed2">0 <span>/ —</span></div>
-          <div class="cycle-remaining" id="cycleRemaining2">no max set</div>
+          <div class="cycle-remaining" id="cycleRemaining2"></div>
         </div>
-        <button class="btn-edit-cycle" onclick="openModal2()">Set max</button>
+        <button class="btn-edit-cycle" onclick="openModalB()">Edit max</button>
       </div>
     </div>
     <div class="progress-track"><div class="progress-fill safe" id="progressFill2" style="width:0%"></div></div>
-    <div class="progress-labels"><span id="progressPct2">0%</span><span id="progressMax2">Set a max to track</span></div>
+    <div class="progress-labels"><span id="progressPct2">—</span><span id="progressMax2"></span></div>
   </div>
 
-  <!-- Edit Next Cycle Modal -->
-  <div class="modal-overlay" id="modalOverlay2">
-    <div class="modal">
-      <h3>Next Cycle Settings</h3>
-      <div class="form-group" style="margin-bottom:1rem"><label>Cycle Start Date</label><input type="date" id="cycleStart2"></div>
-      <div class="form-group"><label>Max Points</label><input type="number" id="cycleMax2" min="1" step="1"></div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal2()">Cancel</button>
-        <button class="btn btn-save" onclick="saveCycle2()">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Cycle Modal -->
+  <!-- Shared Cycle Edit Modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-      <h3>Edit Cycle Settings</h3>
-      <div class="form-group" style="margin-bottom:1rem"><label>Cycle Start Date</label><input type="date" id="cycleStart"></div>
-      <div class="form-group"><label>Max Points</label><input type="number" id="cycleMax" min="1" step="1"></div>
+      <h3 id="editCycleLabel">Edit Cycle Max Points</h3>
+      <input type="hidden" id="editCycleIdx">
+      <div class="form-group"><label>Max Points</label><input type="number" id="editCycleMax" min="1" step="1" placeholder="e.g. 1606"></div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-save" onclick="saveCycle()">Save</button>
+        <button class="btn btn-save" onclick="saveCycleModal()">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- Import Schedule -->
+    <!-- Import Schedule -->
   <div class="import-box">
     <h2>↓ Import Schedule</h2>
     <p class="import-desc">
@@ -301,317 +307,248 @@
   document.getElementById('importMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 
   let shifts = JSON.parse(localStorage.getItem('shifts') || '[]');
-  let cycle  = JSON.parse(localStorage.getItem('cycle')  || 'null') || { start: '2026-03-16', max: 1606 };
 
-  // ── Cycle modal ───────────────────────────────────────────────────────────
-  function saveCycleToStorage() { localStorage.setItem('cycle', JSON.stringify(cycle)); }
-  function openModal() { document.getElementById('cycleStart').value=cycle.start; document.getElementById('cycleMax').value=cycle.max; document.getElementById('modalOverlay').classList.add('open'); }
+  // ── Cycle system ──────────────────────────────────────────────────────────
+  // All cycles are 28-day blocks anchored at 2026-02-16.
+  // We always show the cycle TODAY falls in, and the next one.
+  const ANCHOR = '2026-02-16';
+
+  function anchorDate() { return new Date(ANCHOR.replace(/-/g,'/')); }
+
+  function currentCycleIndex() {
+    const diff = Math.floor((new Date().setHours(0,0,0,0) - anchorDate()) / 86400000);
+    return Math.max(0, Math.floor(diff / 28));
+  }
+
+  function cycleStartFor(idx) {
+    const d = anchorDate(); d.setDate(d.getDate() + idx * 28);
+    return d.toISOString().split('T')[0];
+  }
+  function cycleEndFor(idx) {
+    const d = anchorDate(); d.setDate(d.getDate() + idx * 28 + 27);
+    return d.toISOString().split('T')[0];
+  }
+  function inCycleIdx(sh, idx) {
+    return sh.date >= cycleStartFor(idx) && sh.date <= cycleEndFor(idx);
+  }
+
+  // Per-cycle max points stored by index
+  let cycleMeta = JSON.parse(localStorage.getItem('cycleMeta') || '{}');
+  function saveCycleMeta() { localStorage.setItem('cycleMeta', JSON.stringify(cycleMeta)); }
+
+  // Modals for current (A) and next (B) cycle
+  function openModalA() {
+    const idx = currentCycleIndex();
+    document.getElementById('editCycleLabel').textContent = 'Current Cycle Max Points';
+    document.getElementById('editCycleMax').value = cycleMeta[idx] || '';
+    document.getElementById('editCycleIdx').value = idx;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function openModalB() {
+    const idx = currentCycleIndex() + 1;
+    document.getElementById('editCycleLabel').textContent = 'Next Cycle Max Points';
+    document.getElementById('editCycleMax').value = cycleMeta[idx] || '';
+    document.getElementById('editCycleIdx').value = idx;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
-  function saveCycle() {
-    const s=document.getElementById('cycleStart').value, m=parseInt(document.getElementById('cycleMax').value);
-    if (!s||!m||m<1) { alert('Please fill in valid values.'); return; }
-    cycle.start=s; cycle.max=m; saveCycleToStorage(); closeModal(); render();
+  function saveCycleModal() {
+    const idx = parseInt(document.getElementById('editCycleIdx').value);
+    const val = parseInt(document.getElementById('editCycleMax').value);
+    if (val > 0) cycleMeta[idx] = val; else delete cycleMeta[idx];
+    saveCycleMeta(); closeModal(); render();
   }
   document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
-  // ── Cycle 2 ──────────────────────────────────────────────────────────────
-  let cycle2 = JSON.parse(localStorage.getItem('cycle2') || 'null') || { start: null, max: null };
-  function saveCycle2ToStorage() { localStorage.setItem('cycle2', JSON.stringify(cycle2)); }
-
-  function openModal2() {
-    // Default start = cycle.start + 28 days
-    if (!cycle2.start) {
-      const d = new Date(cycle.start.replace(/-/g,'/'));
-      d.setDate(d.getDate() + 28);
-      document.getElementById('cycleStart2').value = d.toISOString().split('T')[0];
-    } else {
-      document.getElementById('cycleStart2').value = cycle2.start;
-    }
-    document.getElementById('cycleMax2').value = cycle2.max || '';
-    document.getElementById('modalOverlay2').classList.add('open');
-  }
-  function closeModal2() { document.getElementById('modalOverlay2').classList.remove('open'); }
-  function saveCycle2() {
-    const s = document.getElementById('cycleStart2').value;
-    const m = parseInt(document.getElementById('cycleMax2').value);
-    if (!s) { alert('Please set a start date.'); return; }
-    cycle2.start = s; cycle2.max = m || null;
-    saveCycle2ToStorage(); closeModal2(); render();
-  }
-  document.getElementById('modalOverlay2').addEventListener('click', function(e){ if(e.target===this) closeModal2(); });
-
   // ── Override points ───────────────────────────────────────────────────────
+  function effectivePoints(sh) { return sh.manualPoints !== undefined ? sh.manualPoints : sh.totalPoints; }
   function toggleOverride(id) {
-    const row = document.getElementById('override-row-' + id);
-    if (row) row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+    const row = document.getElementById('override-row-'+id);
+    if (row) row.style.display = row.style.display==='none' ? 'flex' : 'none';
   }
-
   function saveOverride(id) {
-    const val = parseFloat(document.getElementById('override-val-' + id).value);
-    if (isNaN(val) || val < 0) { alert('Enter a valid points value.'); return; }
-    const sh = shifts.find(s => s.id == id);
-    if (!sh) return;
-    sh.manualPoints = val;
-    save(); render();
+    const val = parseFloat(document.getElementById('override-val-'+id).value);
+    if (isNaN(val)||val<0) { alert('Enter a valid points value.'); return; }
+    const sh = shifts.find(s=>s.id==id); if(!sh) return;
+    sh.manualPoints = val; save(); render();
   }
-
   function clearOverride(id) {
-    const sh = shifts.find(s => s.id == id);
-    if (!sh) return;
-    delete sh.manualPoints;
-    save(); render();
+    const sh = shifts.find(s=>s.id==id); if(!sh) return;
+    delete sh.manualPoints; save(); render();
   }
 
-  function effectivePoints(sh) {
-    return sh.manualPoints !== undefined ? sh.manualPoints : sh.totalPoints;
+  // ── Spain DST ─────────────────────────────────────────────────────────────
+  function lastSunday(year, month) {
+    const last = new Date(year, month, 0); return last.getDate() - last.getDay();
+  }
+  function spainOffset(dateStr) {
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const date   = new Date(y,m-1,d);
+    const dstOn  = new Date(y,2,lastSunday(y,3));
+    const dstOff = new Date(y,9,lastSunday(y,10));
+    return (date>=dstOn && date<dstOff) ? 120 : 60;
+  }
+  function utcToSpain(dateStr, hhmm) {
+    const h=parseInt(hhmm.slice(0,2)), m=parseInt(hhmm.slice(2,4));
+    let total = h*60+m+spainOffset(dateStr);
+    let [y,mo,d] = dateStr.split('-').map(Number);
+    if (total>=1440) {
+      total-=1440;
+      const next=new Date(y,mo-1,d+1); dateStr=next.toISOString().split('T')[0];
+    }
+    return { dateStr, time: String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0') };
   }
 
   // ── PDF handling ──────────────────────────────────────────────────────────
   let extractedPdfText = '';
-
-  // Load pdf.js from CDN
   (function() {
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    s.onload = () => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    };
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; };
     document.head.appendChild(s);
   })();
 
-  // Wire up drop zone and file input after DOM ready
   window.addEventListener('DOMContentLoaded', () => {
     const zone  = document.getElementById('pdfDrop');
     const input = document.getElementById('pdfFile');
-    zone.addEventListener('click',      () => input.click());
-    zone.addEventListener('dragover',   e  => { e.preventDefault(); zone.classList.add('drag'); });
-    zone.addEventListener('dragleave',  e  => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
-    zone.addEventListener('drop',       e  => {
+    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', e => { if(!zone.contains(e.relatedTarget)) zone.classList.remove('drag'); });
+    zone.addEventListener('drop', e => {
       e.preventDefault(); zone.classList.remove('drag');
-      const f = e.dataTransfer.files[0];
-      if (f && f.type === 'application/pdf') handlePdfFile(f);
-      else feedback('err', 'Please drop a PDF file.');
+      const f=e.dataTransfer.files[0];
+      if(f&&f.type==='application/pdf') handlePdfFile(f);
+      else feedback('err','Please drop a PDF file.');
     });
   });
 
   async function handlePdfFile(file) {
     if (!file) return;
-    feedback('ok', '⏳ Reading PDF…');
-    document.getElementById('pdfFilename').textContent = '📎 ' + file.name;
-    document.getElementById('pdfFilename').style.display = 'block';
+    feedback('ok','⏳ Reading PDF…');
+    document.getElementById('pdfFilename').textContent='📎 '+file.name;
+    document.getElementById('pdfFilename').style.display='block';
     try {
-      const buf = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-      let fullText = '';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page    = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        const items   = content.items.filter(i => i.str.trim());
-        // Group items by Y position into lines
-        const lines = [];
+      const buf=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      let fullText='';
+      for (let p=1;p<=pdf.numPages;p++) {
+        const page=await pdf.getPage(p), content=await page.getTextContent();
+        const items=content.items.filter(i=>i.str.trim());
+        const lines=[];
         for (const item of items) {
-          const y = Math.round(item.transform[5]);
-          const row = lines.find(l => Math.abs(l.y - y) < 4);
-          if (row) row.parts.push({ x: item.transform[4], text: item.str });
-          else     lines.push({ y, parts: [{ x: item.transform[4], text: item.str }] });
+          const y=Math.round(item.transform[5]);
+          const row=lines.find(l=>Math.abs(l.y-y)<4);
+          if(row) row.parts.push({x:item.transform[4],text:item.str});
+          else    lines.push({y,parts:[{x:item.transform[4],text:item.str}]});
         }
-        lines.sort((a,b) => b.y - a.y);
+        lines.sort((a,b)=>b.y-a.y);
         for (const line of lines) {
-          line.parts.sort((a,b) => a.x - b.x);
-          let str = '', lastX = null;
+          line.parts.sort((a,b)=>a.x-b.x);
+          let str='',lastX=null;
           for (const part of line.parts) {
-            if (lastX !== null) str += ' '.repeat(Math.max(1, Math.round((part.x - lastX) / 6)));
-            str  += part.text;
-            lastX = part.x + part.text.length * 6;
+            if(lastX!==null) str+=' '.repeat(Math.max(1,Math.round((part.x-lastX)/6)));
+            str+=part.text; lastX=part.x+part.text.length*6;
           }
-          fullText += str.trimEnd() + '\n';
+          fullText+=str.trimEnd()+'\n';
         }
-        fullText += '\n';
+        fullText+='\n';
       }
-      extractedPdfText = fullText;
-      const btn = document.getElementById('btnImport');
-      btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
-      document.getElementById('debugText').value = fullText;
-      feedback('ok', '✓ PDF loaded (' + pdf.numPages + ' page). Set month and click Import Shifts.');
-    } catch(e) {
-      feedback('err', '⚠ Could not read PDF: ' + e.message);
-    }
-  }
-
-    // ── Spain DST ─────────────────────────────────────────────────────────────
-  function lastSunday(year, month) {
-    const last = new Date(year, month, 0);
-    return last.getDate() - last.getDay();
-  }
-  function spainOffset(dateStr) {
-    const [y,m,d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m-1, d);
-    const dstOn  = new Date(y, 2, lastSunday(y, 3));   // last Sun March
-    const dstOff = new Date(y, 9, lastSunday(y, 10));  // last Sun October
-    return (date >= dstOn && date < dstOff) ? 120 : 60;
-  }
-  function utcToSpain(dateStr, hhmm) {
-    const h=parseInt(hhmm.slice(0,2)), m=parseInt(hhmm.slice(2,4));
-    let total = h*60 + m + spainOffset(dateStr);
-    let [y,mo,d] = dateStr.split('-').map(Number);
-    if (total >= 1440) {
-      total -= 1440;
-      const next = new Date(y, mo-1, d+1);
-      dateStr = next.toISOString().split('T')[0];
-    }
-    return { dateStr, time: String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0') };
+      extractedPdfText=fullText;
+      document.getElementById('debugText').value=fullText;
+      const btn=document.getElementById('btnImport');
+      btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+      feedback('ok','✓ PDF loaded ('+pdf.numPages+' page). Set month and click Import Shifts.');
+    } catch(e) { feedback('err','⚠ Could not read PDF: '+e.message); }
   }
 
   // ── Schedule parser ───────────────────────────────────────────────────────
-  // Approach: find the 4-row table block at top of PDF (header / labels / starts / ends).
-  // Zip by ordinal index. Insert None at positions where label is 'X' (no-fly day)
-  // so time arrays stay aligned with the header.
   function parseSchedule(text, yearMonth) {
     const [year, month] = yearMonth.split('-').map(Number);
     const DAY_RE  = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\d{1,2}$/i;
     const TIME_RE = /^\d{4}$/;
     const isFlightLabel = t => /^f[l1]/i.test(t);
-
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length);
-
-    // Find the header line: most day-name tokens
-    let headerIdx = -1, bestCount = 0;
-    lines.forEach((l, i) => {
-      const n = l.split(/\s+/).filter(t => DAY_RE.test(t)).length;
-      if (n > bestCount) { bestCount = n; headerIdx = i; }
+    const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length);
+    let headerIdx=-1, bestCount=0;
+    lines.forEach((l,i)=>{
+      const n=l.split(/\s+/).filter(t=>DAY_RE.test(t)).length;
+      if(n>bestCount){bestCount=n;headerIdx=i;}
     });
-    if (headerIdx < 0 || bestCount < 3) throw new Error('Could not find day header row.');
-
-    const headerToks = lines[headerIdx].split(/\s+/).filter(t => DAY_RE.test(t));
-    const labelToks  = (lines[headerIdx+1] || '').split(/\s+/).filter(t => t.length);
-    let   startToks  = (lines[headerIdx+2] || '').split(/\s+/).filter(t => t.length);
-    let   endToks    = (lines[headerIdx+3] || '').split(/\s+/).filter(t => t.length);
-
-    if (headerToks.length !== labelToks.length)
-      throw new Error('Header (' + headerToks.length + ' days) and label row (' + labelToks.length + ' labels) don\'t match. Check PDF format.');
-
-    // Insert null into time arrays at positions where label is 'X' (blank time slots)
-    labelToks.forEach((lbl, i) => {
-      if (lbl.toUpperCase() === 'X') {
-        startToks.splice(i, 0, null);
-        endToks.splice(i, 0, null);
-      }
+    if(headerIdx<0||bestCount<3) throw new Error('Could not find day header row.');
+    const headerToks = lines[headerIdx].split(/\s+/).filter(t=>DAY_RE.test(t));
+    const labelToks  = (lines[headerIdx+1]||'').split(/\s+/).filter(t=>t.length);
+    let startToks    = (lines[headerIdx+2]||'').split(/\s+/).filter(t=>t.length);
+    let endToks      = (lines[headerIdx+3]||'').split(/\s+/).filter(t=>t.length);
+    if(headerToks.length!==labelToks.length)
+      throw new Error('Header ('+headerToks.length+' days) and label row ('+labelToks.length+') don\'t match.');
+    labelToks.forEach((lbl,i)=>{ if(lbl.toUpperCase()==='X'){startToks.splice(i,0,null);endToks.splice(i,0,null);} });
+    const parsed=[],errors=[];
+    headerToks.forEach((htok,i)=>{
+      const dayNum=parseInt(htok.replace(/\D/g,''));
+      const lbl=labelToks[i]||'';
+      if(!isFlightLabel(lbl)) return;
+      const s=startToks[i],e=endToks[i];
+      if(!s||!e||!TIME_RE.test(s)||!TIME_RE.test(e)){errors.push('Day '+dayNum+': missing times');return;}
+      const dateStr=year+'-'+String(month).padStart(2,'0')+'-'+String(dayNum).padStart(2,'0');
+      const sv=utcToSpain(dateStr,s),ev=utcToSpain(dateStr,e);
+      parsed.push({date:sv.dateStr,startTime:sv.time,endTime:ev.time});
     });
-
-    const parsed = [], errors = [];
-    headerToks.forEach((htok, i) => {
-      const dayNum = parseInt(htok.replace(/\D/g,''));
-      const lbl    = labelToks[i] || '';
-      if (!isFlightLabel(lbl)) return;
-      const s = startToks[i], e = endToks[i];
-      if (!s || !e || !TIME_RE.test(s) || !TIME_RE.test(e)) {
-        errors.push('Day ' + dayNum + ': missing times (s=' + s + ' e=' + e + ')');
-        return;
-      }
-      const dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(dayNum).padStart(2,'0');
-      const sv = utcToSpain(dateStr, s);
-      const ev = utcToSpain(dateStr, e);
-      parsed.push({ date: sv.dateStr, startTime: sv.time, endTime: ev.time });
-    });
-
-    // Deduplicate
-    const seen = new Set();
-    return { parsed: parsed.filter(p => {
-      const k = p.date+'_'+p.startTime; if (seen.has(k)) return false; seen.add(k); return true;
-    }), errors };
+    const seen=new Set();
+    return {parsed:parsed.filter(p=>{const k=p.date+'_'+p.startTime;if(seen.has(k))return false;seen.add(k);return true;}),errors};
   }
 
-    function importSchedule() {
-    const text = extractedPdfText;
-    const ym   = document.getElementById('importMonth').value;
-    const mode = document.getElementById('importMode').value;
-    if (!text.trim()) { feedback('err','Please select a PDF first.'); return; }
-    if (!ym)          { feedback('err','Please select the schedule month and year.'); return; }
-
-    let parsed, errors;
-    try { ({ parsed, errors } = parseSchedule(text, ym)); }
-    catch(e) { feedback('err','⚠ ' + e.message); return; }
-
-    if (!parsed.length) { feedback('err', 'No shifts found. ' + (errors.length ? errors.join('; ') : 'Check format.')); return; }
-
-    const newShifts = parsed.map(p => {
-      const [sh,sm] = p.startTime.split(':').map(Number);
-      let [eh,em]   = p.endTime.split(':').map(Number);
-      let sMin=sh*60+sm, eMin=eh*60+em;
-      if (eMin<=sMin) eMin+=1440;
-      const {segments,totalPoints} = calcPoints(sMin,eMin);
-      return { id: Date.now()+Math.random(), date:p.date, startTime:p.startTime, endTime:p.endTime, segments, totalPoints };
+  function importSchedule() {
+    const text=extractedPdfText, ym=document.getElementById('importMonth').value, mode=document.getElementById('importMode').value;
+    if(!text.trim()){feedback('err','Please select a PDF first.');return;}
+    if(!ym){feedback('err','Please select the schedule month and year.');return;}
+    let parsed,errors;
+    try{({parsed,errors}=parseSchedule(text,ym));}catch(e){feedback('err','⚠ '+e.message);return;}
+    if(!parsed.length){feedback('err','No shifts found. '+(errors.length?errors.join('; '):'Check format.'));return;}
+    const newShifts=parsed.map(p=>{
+      const [sh,sm]=p.startTime.split(':').map(Number);let[eh,em]=p.endTime.split(':').map(Number);
+      let sMin=sh*60+sm,eMin=eh*60+em; if(eMin<=sMin)eMin+=1440;
+      const{segments,totalPoints}=calcPoints(sMin,eMin);
+      return{id:Date.now()+Math.random(),date:p.date,startTime:p.startTime,endTime:p.endTime,segments,totalPoints};
     });
-
-    let skipped = 0;
-    if (mode === 'replace') {
-      shifts = newShifts;
-    } else {
-      const existing = new Set(shifts.map(s => s.date+'_'+s.startTime));
-      const toAdd = newShifts.filter(s => !existing.has(s.date+'_'+s.startTime));
-      skipped = newShifts.length - toAdd.length;
-      shifts = [...shifts, ...toAdd];
-    }
-
-    shifts.sort((a,b) => a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
-    save(); render();
-
-    let msg = '✓ Imported ' + parsed.length + ' shift' + (parsed.length!==1?'s':'') + '.';
-    if (skipped)       msg += '  ' + skipped + ' duplicate(s) skipped.';
-    if (errors.length) msg += '  ⚠ ' + errors.join('; ');
-    feedback('ok', msg);
+    let skipped=0;
+    if(mode==='replace'){shifts=newShifts;}
+    else{const ex=new Set(shifts.map(s=>s.date+'_'+s.startTime));const toAdd=newShifts.filter(s=>!ex.has(s.date+'_'+s.startTime));skipped=newShifts.length-toAdd.length;shifts=[...shifts,...toAdd];}
+    shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
+    save();render();
+    let msg='✓ Imported '+parsed.length+' shift'+(parsed.length!==1?'s':'')+'.';
+    if(skipped) msg+='  '+skipped+' duplicate(s) skipped.';
+    if(errors.length) msg+='  ⚠ '+errors.join('; ');
+    feedback('ok',msg);
   }
 
-  function feedback(type, msg) {
-    const el = document.getElementById('importFeedback');
-    el.className = 'import-feedback ' + type;
-    el.textContent = msg;
-  }
-  function clearImport() {
-    extractedPdfText = '';
-    document.getElementById('pdfFile').value = ''; // reset file input
-    document.getElementById('pdfFilename').style.display = 'none';
-    document.getElementById('pdfFilename').textContent = '';
-    document.getElementById('btnImport').disabled = true;
-    document.getElementById('btnImport').style.opacity = '.4';
-    document.getElementById('btnImport').style.cursor = 'not-allowed';
-    const el = document.getElementById('importFeedback');
-    el.className = 'import-feedback'; el.textContent = '';
+  function feedback(type,msg){const el=document.getElementById('importFeedback');el.className='import-feedback '+type;el.textContent=msg;}
+  function clearImport(){
+    extractedPdfText='';document.getElementById('pdfFile').value='';
+    document.getElementById('pdfFilename').style.display='none';document.getElementById('pdfFilename').textContent='';
+    const btn=document.getElementById('btnImport');btn.disabled=true;btn.style.opacity='.4';btn.style.cursor='not-allowed';
+    const el=document.getElementById('importFeedback');el.className='import-feedback';el.textContent='';
   }
 
-  // ── Points ────────────────────────────────────────────────────────────────
-  const BOUNDARIES = [
-    {from:0,    to:420,  rate:2.0},
-    {from:420,  to:540,  rate:1.5},
-    {from:540,  to:1200, rate:1.0},
-    {from:1200, to:1320, rate:1.5},
-    {from:1320, to:1440, rate:2.0},
-  ];
-  function toHHMM(m){ const h=Math.floor(m/60)%24,mn=m%60; return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0'); }
+  // ── Points calculation ────────────────────────────────────────────────────
+  const BOUNDARIES=[{from:0,to:420,rate:2.0},{from:420,to:540,rate:1.5},{from:540,to:1200,rate:1.0},{from:1200,to:1320,rate:1.5},{from:1320,to:1440,rate:2.0}];
+  function toHHMM(m){const h=Math.floor(m/60)%24,mn=m%60;return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0');}
   function calcPoints(sMin,eMin){
     let segs=[],total=0;
     const ext=[...BOUNDARIES,...BOUNDARIES.map(b=>({from:b.from+1440,to:b.to+1440,rate:b.rate}))];
-    for(const seg of ext){
-      const oS=Math.max(sMin,seg.from),oE=Math.min(eMin,seg.to);
-      if(oE<=oS) continue;
-      const mins=oE-oS,pts=(mins/5)*seg.rate;
-      segs.push({from:toHHMM(oS%1440),to:toHHMM(oE%1440===0&&oE!==oS?0:oE%1440),minutes:mins,rate:seg.rate,points:pts});
-      total+=pts;
-    }
-    return {segments:segs,totalPoints:total};
+    for(const seg of ext){const oS=Math.max(sMin,seg.from),oE=Math.min(eMin,seg.to);if(oE<=oS)continue;const mins=oE-oS,pts=(mins/5)*seg.rate;segs.push({from:toHHMM(oS%1440),to:toHHMM(oE%1440===0&&oE!==oS?0:oE%1440),minutes:mins,rate:seg.rate,points:pts});total+=pts;}
+    return{segments:segs,totalPoints:total};
   }
 
   function addShift(){
     const d=document.getElementById('shiftDate').value,s=document.getElementById('startTime').value,e=document.getElementById('endTime').value;
     if(!d||!s||!e){alert('Please fill in all fields.');return;}
-    const [sh,sm]=s.split(':').map(Number);let[eh,em]=e.split(':').map(Number);
-    let sMin=sh*60+sm,eMin=eh*60+em; if(eMin<=sMin) eMin+=1440;
+    const[sh,sm]=s.split(':').map(Number);let[eh,em]=e.split(':').map(Number);
+    let sMin=sh*60+sm,eMin=eh*60+em;if(eMin<=sMin)eMin+=1440;
     const{segments,totalPoints}=calcPoints(sMin,eMin);
     shifts.push({id:Date.now(),date:d,startTime:s,endTime:e,segments,totalPoints});
     shifts.sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
     save();render();
   }
+
   function deleteShift(id){shifts=shifts.filter(s=>s.id!==id);save();render();}
   function toggleCard(id){document.querySelector('.shift-card[data-id="'+id+'"]')?.classList.toggle('open');}
   function save(){localStorage.setItem('shifts',JSON.stringify(shifts));}
@@ -620,18 +557,12 @@
   function fmtShort(d){const[y,m,dy]=d.split('-');return new Date(y,m-1,dy).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
   function dotClass(r){return r===1.0?'dot-1':r===1.5?'dot-15':'dot-2';}
 
-  function cycleEnd(c) {
-    const d=new Date(c.start.replace(/-/g,'/'));d.setDate(d.getDate()+27);return d.toISOString().split('T')[0];
-  }
-  function inCycle(sh,c) {
-    if(!c||!c.start) return false;const end=cycleEnd(c);return sh.date>=c.start&&sh.date<=end;
-  }
-  function renderCycleCard(ids,total,cycleObj) {
-    const end=cycleEnd(cycleObj);
-    document.getElementById(ids.meta).textContent=fmtShort(cycleObj.start)+' – '+fmtShort(end);
-    const max=cycleObj.max;
+  // ── Render cycle cards ────────────────────────────────────────────────────
+  function renderCycleCard(ids, total, idx) {
+    const start=cycleStartFor(idx), end=cycleEndFor(idx), max=cycleMeta[idx]||null;
+    document.getElementById(ids.meta).textContent=fmtShort(start)+' – '+fmtShort(end);
     document.getElementById(ids.used).innerHTML=fmt(total)+' <span>/ '+(max||'—')+'</span>';
-    if (max) {
+    if(max){
       const pct=Math.min(100,(total/max)*100);
       document.getElementById(ids.remaining).textContent=total>max?fmt(total-max)+' over limit!':fmt(max-total)+' remaining';
       document.getElementById(ids.pct).textContent=pct.toFixed(1)+'%';
@@ -641,32 +572,48 @@
     } else {
       document.getElementById(ids.remaining).textContent='No max set';
       document.getElementById(ids.pct).textContent='—';
-      document.getElementById(ids.maxlbl).textContent='Click “Set max” to track';
-      document.getElementById(ids.fill).style.width='0%';
+      document.getElementById(ids.maxlbl).textContent='Click "Edit cycle" to set max';
+      const fill=document.getElementById(ids.fill);fill.style.width='0%';fill.className='progress-fill safe';
     }
   }
-  function renderCycle(grandTotal) {
-    const total1=shifts.reduce((s,sh)=>inCycle(sh,cycle)?s+effectivePoints(sh):s,0);
-    renderCycleCard({meta:'cycleMeta',used:'cycleUsed',remaining:'cycleRemaining',pct:'progressPct',maxlbl:'progressMax',fill:'progressFill'},total1,cycle);
-    const hasOverflow=shifts.some(sh=>!inCycle(sh,cycle));
-    const box2=document.getElementById('cycleBox2');
-    if (hasOverflow) {
-      box2.style.display='block';
-      if (!cycle2.start){const d=new Date(cycle.start.replace(/-/g,'/'));d.setDate(d.getDate()+28);cycle2.start=d.toISOString().split('T')[0];}
-      const total2=shifts.reduce((s,sh)=>inCycle(sh,cycle2)?s+effectivePoints(sh):s,0);
-      renderCycleCard({meta:'cycleMeta2',used:'cycleUsed2',remaining:'cycleRemaining2',pct:'progressPct2',maxlbl:'progressMax2',fill:'progressFill2'},total2,cycle2);
-    } else { box2.style.display='none'; }
+
+  function cycleStartFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28);return d.toISOString().split('T')[0];}
+  function cycleEndFor(idx){const d=new Date(ANCHOR.replace(/-/g,'/'));d.setDate(d.getDate()+idx*28+27);return d.toISOString().split('T')[0];}
+
+  const ANCHOR = '2026-02-16';
+
+  // ── Confirm clear ─────────────────────────────────────────────────────────
+  function confirmClearShifts(){
+    if(!shifts.length){alert('No shifts to clear.');return;}
+    if(confirm('Delete all '+shifts.length+' shift'+(shifts.length!==1?'s':'')+' ? Cannot be undone.')){shifts=[];save();render();}
+  }
+  function confirmResetAll(){
+    if(confirm('Reset everything? Deletes all shifts and cycle max settings.')){
+      shifts=[];cycleMeta={};localStorage.removeItem('shifts');localStorage.removeItem('cycleMeta');render();
+    }
   }
 
-    function render(){
-    const list=document.getElementById('shiftsList'),badge=document.getElementById('totalBadge');
-    const grand=shifts.reduce((s,sh)=>s+effectivePoints(sh),0);
+  // ── Main render ───────────────────────────────────────────────────────────
+  function render(){
+    const cidx=currentCycleIndex(), nidx=cidx+1;
+    const total1=shifts.reduce((s,sh)=>inCycleIdx(sh,cidx)?s+effectivePoints(sh):s,0);
+    const total2=shifts.reduce((s,sh)=>inCycleIdx(sh,nidx)?s+effectivePoints(sh):s,0);
+    const grand =shifts.reduce((s,sh)=>s+effectivePoints(sh),0);
+
+    document.getElementById('cycleTitle1').textContent='Current Cycle';
+    document.getElementById('cycleTitle2').textContent='Next Cycle';
+    renderCycleCard({meta:'cycleMeta1',used:'cycleUsed1',remaining:'cycleRemaining1',pct:'progressPct1',maxlbl:'progressMax1',fill:'progressFill1'},total1,cidx);
+    renderCycleCard({meta:'cycleMeta2',used:'cycleUsed2',remaining:'cycleRemaining2',pct:'progressPct2',maxlbl:'progressMax2',fill:'progressFill2'},total2,nidx);
+
+    const badge=document.getElementById('totalBadge');
     badge.textContent=fmt(grand)+' pts total';
-    renderCycle(grand);
+
+    const list=document.getElementById('shiftsList');
     if(!shifts.length){
       list.innerHTML='<div class="empty-state"><div class="empty-icon">🗓</div>No shifts yet.<br>Import your schedule or add one above.</div>';
       const gt=document.getElementById('grandTotal');if(gt)gt.remove();return;
     }
+
     list.innerHTML=shifts.map(sh=>`
       <div class="shift-card" data-id="${sh.id}">
         <div class="shift-card-header" onclick="toggleCard(${sh.id})">
@@ -685,35 +632,17 @@
           </table>
         </div>
         <div class="override-input-row" id="override-row-${sh.id}" style="display:none">
-          <label>Override points:</label>
+          <label>Override pts:</label>
           <input type="number" id="override-val-${sh.id}" min="0" step="0.5" value="${sh.manualPoints!==undefined?sh.manualPoints:fmt(sh.totalPoints)}" onclick="event.stopPropagation()">
           <button class="btn-override-save" onclick="event.stopPropagation();saveOverride(${sh.id})">Save</button>
           <button class="btn-override-clear" onclick="event.stopPropagation();clearOverride(${sh.id})">Reset</button>
         </div>
       </div>`).join('');
+
     let gt=document.getElementById('grandTotal');
     if(!gt){gt=document.createElement('div');gt.id='grandTotal';gt.className='grand-total';list.parentNode.appendChild(gt);}
     const tm=shifts.reduce((s,sh)=>{const[sh2,sm2]=sh.startTime.split(':').map(Number);let[eh,em]=sh.endTime.split(':').map(Number);let st=sh2*60+sm2,en=eh*60+em;if(en<=st)en+=1440;return s+(en-st);},0);
     gt.innerHTML=`<div><div class="grand-total-label">Grand Total</div><div class="grand-total-sub">${shifts.length} shift${shifts.length!==1?'s':''} · ${Math.floor(tm/60)}h ${tm%60}m</div></div><div><div class="grand-total-val">${fmt(grand)}</div><div class="grand-total-sub" style="text-align:right">points</div></div>`;
-  }
-
-  function confirmClearShifts() {
-    if (!shifts.length) { alert('No shifts to clear.'); return; }
-    if (confirm('Delete all ' + shifts.length + ' shift' + (shifts.length !== 1 ? 's' : '') + '? This cannot be undone.')) {
-      shifts = [];
-      save();
-      render();
-    }
-  }
-
-  function confirmResetAll() {
-    if (confirm('Reset everything? This will delete all shifts AND reset cycle settings to defaults. Cannot be undone.')) {
-      shifts = [];
-      cycle = { start: '2026-03-16', max: 1606 };
-      localStorage.removeItem('shifts');
-      localStorage.removeItem('cycle');
-      render();
-    }
   }
 
   render();
